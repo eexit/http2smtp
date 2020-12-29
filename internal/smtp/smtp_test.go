@@ -1,0 +1,336 @@
+package smtp
+
+import (
+	"context"
+	"errors"
+	"io"
+	"reflect"
+	"strings"
+	"testing"
+
+	"github.com/eexit/httpsmtp/internal/converter"
+	"github.com/rs/zerolog"
+)
+
+func TestSMTP_Send(t *testing.T) {
+	type args struct {
+		ctx context.Context
+		msg *converter.Message
+	}
+	tests := []struct {
+		name       string
+		smtpClient goSMTP
+		args       args
+		accepted   int
+		wantErr    bool
+	}{
+		{
+			name:       "message is nil",
+			smtpClient: &fakeSMTP{},
+			args: args{
+				ctx: context.Background(),
+				msg: nil,
+			},
+			accepted: 0,
+			wantErr:  true,
+		},
+		{
+			name:       "error when reading raw message",
+			smtpClient: &fakeSMTP{},
+			args: args{
+				ctx: context.Background(),
+				msg: converter.NewMessage("", nil, nil, nil, &failingReader{}),
+			},
+			accepted: 0,
+			wantErr:  true,
+		},
+		{
+			name:       "message has no recipients",
+			smtpClient: &fakeSMTP{},
+			args: args{
+				ctx: context.Background(),
+				msg: converter.NewMessage("", nil, nil, nil, strings.NewReader("")),
+			},
+			accepted: 0,
+			wantErr:  true,
+		},
+		{
+			name:       "context is done",
+			smtpClient: &fakeSMTP{},
+			args: args{
+				// Expires the given context
+				ctx: func() context.Context {
+					ctx, cancel := context.WithCancel(context.Background())
+					defer cancel()
+					return ctx
+				}(),
+				msg: converter.NewMessage("from@example.com", []string{"to@example.com"}, nil, nil, strings.NewReader("")),
+			},
+			accepted: 0,
+			wantErr:  false,
+		},
+		{
+			name: "mail command failed",
+			smtpClient: &fakeSMTP{
+				mail: strCmdKO,
+			},
+			args: args{
+				ctx: context.Background(),
+				msg: converter.NewMessage("from@example.com", []string{"to@example.com"}, nil, nil, strings.NewReader("")),
+			},
+			accepted: 0,
+			wantErr:  true,
+		},
+		{
+			name: "rcpt command failed",
+			smtpClient: &fakeSMTP{
+				mail: strCmdOK,
+				rcpt: strCmdKO,
+			},
+			args: args{
+				ctx: context.Background(),
+				msg: converter.NewMessage("from@example.com", []string{"to@example.com"}, nil, nil, strings.NewReader("")),
+			},
+			accepted: 0,
+			wantErr:  true,
+		},
+		{
+			name: "data command failed",
+			smtpClient: &fakeSMTP{
+				mail: strCmdOK,
+				rcpt: strCmdOK,
+				data: func() (io.WriteCloser, error) {
+					return nil, errors.New("internal error")
+				},
+			},
+			args: args{
+				ctx: context.Background(),
+				msg: converter.NewMessage("from@example.com", []string{"to@example.com"}, nil, nil, strings.NewReader("")),
+			},
+			accepted: 0,
+			wantErr:  true,
+		},
+		{
+			name: "data write command failed",
+			smtpClient: &fakeSMTP{
+				mail: strCmdOK,
+				rcpt: strCmdOK,
+				data: func() (io.WriteCloser, error) {
+					return &fakeWriteCloser{err: errors.New("failed to write")}, nil
+				},
+			},
+			args: args{
+				ctx: context.Background(),
+				msg: converter.NewMessage("from@example.com", []string{"to@example.com"}, nil, nil, strings.NewReader("")),
+			},
+			accepted: 0,
+			wantErr:  true,
+		},
+		{
+			name: "transaction succeed",
+			smtpClient: &fakeSMTP{
+				mail: strCmdOK,
+				rcpt: strCmdOK,
+				data: dataOK,
+			},
+			args: args{
+				ctx: context.Background(),
+				msg: converter.NewMessage("from@example.com", []string{"to@example.com"}, nil, nil, strings.NewReader("")),
+			},
+			accepted: 1,
+			wantErr:  false,
+		},
+		{
+			name: "transaction succeed with multiple tos",
+			smtpClient: &fakeSMTP{
+				mail: strCmdOK,
+				rcpt: strCmdOK,
+				data: dataOK,
+			},
+			args: args{
+				ctx: context.Background(),
+				msg: converter.NewMessage("from@example.com", []string{"to1@example.com", "John Doe <to2@example.com>", "to3@example.com"}, nil, nil, strings.NewReader("")),
+			},
+			accepted: 3,
+			wantErr:  false,
+		},
+		{
+			name: "transaction succeed with to and cc",
+			smtpClient: &fakeSMTP{
+				mail: strCmdOK,
+				rcpt: strCmdOK,
+				data: dataOK,
+			},
+			args: args{
+				ctx: context.Background(),
+				msg: converter.NewMessage("from@example.com", []string{"to1@example.com", "to2@example.com"}, []string{"John Doe <cc@example.com>"}, nil, strings.NewReader("")),
+			},
+			accepted: 3,
+			wantErr:  false,
+		},
+		{
+			name: "transactions succeed with to, cc, and bcc",
+			smtpClient: &fakeSMTP{
+				mail: strCmdOK,
+				rcpt: strCmdOK,
+				data: dataOK,
+			},
+			args: args{
+				ctx: context.Background(),
+				msg: converter.NewMessage("from@example.com", []string{"to1@example.com", "to2@example.com"}, []string{"John Doe <cc@example.com>"}, []string{"bcc@example.com"}, strings.NewReader("")),
+			},
+			accepted: 4,
+			wantErr:  false,
+		},
+		{
+			name: "transactions succeed with bcc only",
+			smtpClient: &fakeSMTP{
+				mail: strCmdOK,
+				rcpt: strCmdOK,
+				data: dataOK,
+			},
+			args: args{
+				ctx: context.Background(),
+				msg: converter.NewMessage("from@example.com", nil, nil, []string{"bcc1@example.com", "bcc2@example.com", "bcc3@example.com"}, strings.NewReader("")),
+			},
+			accepted: 3,
+			wantErr:  false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &SMTP{
+				client: tt.smtpClient,
+				logger: zerolog.Nop(),
+			}
+			got, err := s.Send(tt.args.ctx, tt.args.msg)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("SMTP.Send() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.accepted {
+				t.Errorf("SMTP.Send() = %v, want %v", got, tt.accepted)
+			}
+		})
+	}
+}
+
+func Test_buildRcptLists(t *testing.T) {
+	tests := []struct {
+		name string
+		msg  *converter.Message
+		want [][]string
+	}{
+		{
+			name: "no recipient",
+			msg:  nil,
+			want: nil,
+		},
+		{
+			name: "single to recipient",
+			msg:  converter.NewMessage("", []string{"to@example.com"}, nil, nil, nil),
+			want: [][]string{{"to@example.com"}},
+		},
+		{
+			name: "multiple to recipients",
+			msg:  converter.NewMessage("", []string{"to@example.com", "to2@example.com"}, nil, nil, nil),
+			want: [][]string{{"to@example.com", "to2@example.com"}},
+		},
+		{
+			name: "single cc recipient",
+			msg:  converter.NewMessage("", nil, []string{"cc@example.com"}, nil, nil),
+			want: [][]string{{"cc@example.com"}},
+		},
+		{
+			name: "multiple cc recipients",
+			msg:  converter.NewMessage("", nil, []string{"cc@example.com", "cc2@example.com"}, nil, nil),
+			want: [][]string{{"cc@example.com", "cc2@example.com"}},
+		},
+		{
+			name: "to and cc recipients",
+			msg:  converter.NewMessage("", []string{"to@example.com"}, []string{"cc@example.com"}, nil, nil),
+			want: [][]string{{"to@example.com", "cc@example.com"}},
+		},
+		{
+			name: "to, cc, and bcc recipients",
+			msg:  converter.NewMessage("", []string{"to@example.com"}, []string{"cc@example.com"}, []string{"bcc@example.com"}, nil),
+			want: [][]string{{"to@example.com", "cc@example.com"}, {"bcc@example.com"}},
+		},
+		{
+			name: "to, cc, and multiple bcc recipients",
+			msg:  converter.NewMessage("", []string{"to@example.com"}, []string{"cc@example.com"}, []string{"bcc@example.com", "bcc2@example.com"}, nil),
+			want: [][]string{{"to@example.com", "cc@example.com"}, {"bcc@example.com"}, {"bcc2@example.com"}},
+		},
+		{
+			name: "bcc only recipients",
+			msg:  converter.NewMessage("", nil, nil, []string{"bcc@example.com", "bcc2@example.com"}, nil),
+			want: [][]string{{"bcc@example.com"}, {"bcc2@example.com"}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := buildRcptLists(tt.msg); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("buildRcptLists() = %#v, want %#v", got, tt.want)
+			}
+		})
+	}
+}
+
+var (
+	strCmdOK = func(s string) error { return nil }
+	strCmdKO = func(s string) error { return errors.New("cmd failed") }
+	dataOK   = func() (io.WriteCloser, error) { return &fakeWriteCloser{}, nil }
+)
+
+type fakeSMTP struct {
+	mail  func(string) error
+	rcpt  func(string) error
+	data  func() (io.WriteCloser, error)
+	close func() error
+}
+
+func (f *fakeSMTP) Mail(s string) error {
+	if f.mail == nil {
+		panic("not implemented")
+	}
+	return f.mail(s)
+}
+
+func (f *fakeSMTP) Rcpt(s string) error {
+	if f.rcpt == nil {
+		panic("not implemented")
+	}
+	return f.rcpt(s)
+}
+
+func (f *fakeSMTP) Data() (io.WriteCloser, error) {
+	if f.data == nil {
+		panic("not implemented")
+	}
+	return f.data()
+}
+
+func (f *fakeSMTP) Close() error {
+	if f.close == nil {
+		panic("not implemented")
+	}
+	return f.close()
+}
+
+type failingReader struct{}
+
+func (*failingReader) Read(p []byte) (n int, err error) {
+	return 0, errors.New("read error")
+}
+
+type fakeWriteCloser struct {
+	err error
+}
+
+func (f *fakeWriteCloser) Write(p []byte) (int, error) {
+	return len(p), f.err
+}
+
+func (*fakeWriteCloser) Close() error {
+	return nil
+}
