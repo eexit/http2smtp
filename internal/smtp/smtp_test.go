@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"io"
+	"io/ioutil"
+	"net"
 	"reflect"
 	"strings"
 	"testing"
@@ -11,6 +13,65 @@ import (
 	"github.com/eexit/httpsmtp/internal/converter"
 	"github.com/rs/zerolog"
 )
+
+func TestNewSMTP(t *testing.T) {
+	t.Run("constructor fails to dial to SMTP server", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Error("expected to panic")
+			}
+		}()
+
+		NewSMTP("::", zerolog.New(ioutil.Discard))
+	})
+
+	t.Run("SMTP dial ok", func(t *testing.T) {
+		ln := newLocalListener(t)
+		defer ln.Close()
+
+		go NewSMTP(ln.Addr().String(), zerolog.New(ioutil.Discard))
+
+		conn, err := ln.Accept()
+		if err != nil {
+			t.Fatalf("failed to accept connection: %v", err)
+		}
+		defer conn.Close()
+
+		send := smtpSender{conn}.send
+		send("220 127.0.0.1 ESMTP service ready")
+	})
+
+	t.Run("SMTP server returns a bad handshake", func(t *testing.T) {
+		ln := newLocalListener(t)
+		defer ln.Close()
+
+		errc := make(chan error)
+
+		go func() {
+			defer func() {
+				if r := recover(); r == nil {
+					errc <- errors.New("expected to panic")
+					return
+				}
+				errc <- nil
+			}()
+			NewSMTP(ln.Addr().String(), zerolog.New(ioutil.Discard))
+		}()
+
+		conn, err := ln.Accept()
+		if err != nil {
+			t.Fatalf("failed to accept connection: %v", err)
+		}
+		defer conn.Close()
+
+		send := smtpSender{conn}.send
+		send("502 127.0.0.1 ESMTP service ready")
+
+		if err := <-errc; err != nil {
+			t.Error(err)
+		}
+	})
+}
 
 func TestSMTP_Send(t *testing.T) {
 	type args struct {
@@ -274,6 +335,25 @@ func Test_buildRcptLists(t *testing.T) {
 			}
 		})
 	}
+}
+
+// Copied from smtp/smtp_test.go
+func newLocalListener(t *testing.T) net.Listener {
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	return ln
+}
+
+// Copied from smtp/smtp_test.go
+type smtpSender struct {
+	w io.Writer
+}
+
+// Copied from smtp/smtp_test.go
+func (s smtpSender) send(f string) {
+	s.w.Write([]byte(f + "\r\n"))
 }
 
 var (

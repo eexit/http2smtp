@@ -47,7 +47,7 @@ func New(e env.Bag) *Server {
 
 	logger.Info().Msg("app is starting")
 
-	smtpClient := smtp.NewSMTP(e.SMTPHost, e.SMTPPort, logger)
+	smtpClient := smtp.NewSMTP(e.SMTPAddr, logger)
 
 	svr := &Server{
 		cancelFunc:  cancel,

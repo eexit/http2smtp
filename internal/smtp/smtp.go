@@ -29,8 +29,7 @@ type SMTP struct {
 }
 
 // NewSMTP creates a new Go native SMTP
-func NewSMTP(host, port string, logger zerolog.Logger) *SMTP {
-	addr := host + ":" + port
+func NewSMTP(addr string, logger zerolog.Logger) *SMTP {
 	logger = logger.With().Dict(
 		"smtp", zerolog.Dict().
 			Fields(map[string]interface{}{

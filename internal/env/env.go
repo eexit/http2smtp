@@ -6,7 +6,6 @@ type Bag struct {
 	ServerPort            string `envconfig:"SERVER_PORT" default:"8080"`
 	ServerShutdownTimeout int    `envconfig:"SERVER_SHUTDOWN_TIMEOUT" default:"5"`
 	HTTPTraceHeader       string `envconfig:"HTTP_TRACE_HEADER"`
-	SMTPHost              string `envconfig:"SMTP_HOST" required:"true"`
-	SMTPPort              string `envconfig:"SMTP_PORT" required:"true"`
+	SMTPAddr              string `envconfig:"SMTP_ADDR" required:"true"`
 	LogLevel              string `envconfig:"LOG_LEVEL" default:"info"`
 }
