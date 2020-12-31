@@ -8,6 +8,7 @@ import (
 	"net/smtp"
 
 	"github.com/eexit/httpsmtp/internal/converter"
+	ictx "github.com/eexit/httpsmtp/internal/ctx"
 	"github.com/rs/zerolog"
 )
 
@@ -51,15 +52,6 @@ func NewSMTP(host, port string, logger zerolog.Logger) *SMTP {
 	}
 }
 
-// WithLogger returns an SMTP instance contextualized with the given logger
-func (s *SMTP) WithLogger(logger zerolog.Logger) *SMTP {
-	return &SMTP{
-		addr:   s.addr,
-		client: s.client,
-		logger: logger,
-	}
-}
-
 // Send sends given messsage and returns the number accepted recipients by the server.
 // One transaction is executed for the combination of To+Cc while it will create
 // one extra transaction for reach Bcc recipient.
@@ -68,9 +60,16 @@ func (s *SMTP) Send(ctx context.Context, msg *converter.Message) (int, error) {
 		return 0, errors.New("failed to process nil message")
 	}
 
+	logger := s.logger
+
+	// Contextualize the logger by adding the context trace ID
+	if traceID := ictx.TraceID(ctx); traceID != "" {
+		logger = logger.With().Str("trace_id", traceID).Logger()
+	}
+
 	raw, err := msg.Raw()
 	if err != nil {
-		s.logger.Error().Err(err).Msg("failed to read email data")
+		logger.Error().Err(err).Msg("failed to read email data")
 		return 0, err
 	}
 
@@ -78,24 +77,26 @@ func (s *SMTP) Send(ctx context.Context, msg *converter.Message) (int, error) {
 		return 0, errors.New("message has no recipient")
 	}
 
-	s.logger.Info().Msg("sending message...")
+	logger.Info().Msg("sending message")
 
 	accepted := 0
 	// Loops over all recipients lists and execute one email transaction per list
 	for _, tos := range buildRcptLists(msg) {
 		select {
 		case <-ctx.Done():
-			s.logger.Warn().Msg("process aborted")
+			logger.Warn().Msg("process aborted")
 			return accepted, nil
 		default:
-			if err := s.execTransaction(msg.From(), tos, raw); err != nil {
-				return accepted, fmt.Errorf("an error occured while sending emails: %w", err)
+			logger.Debug().Strs("tos", tos).Msg("executing transaction")
+			if err := s.execTransaction(logger, msg.From(), tos, raw); err != nil {
+				return accepted, fmt.Errorf("an error occurred while sending emails: %w", err)
 			}
 			accepted += len(tos)
+			logger.Debug().Strs("tos", tos).Msg("transaction executed")
 		}
 	}
 
-	s.logger.Info().Msg("message sent")
+	logger.Info().Int("accepted", accepted).Msg("message sent")
 
 	return accepted, nil
 }
@@ -106,27 +107,22 @@ func (s *SMTP) Close() error {
 	return s.client.Close()
 }
 
-func (s *SMTP) execTransaction(from string, tos []string, raw []byte) error {
-	logger := s.logger.With().Fields(map[string]interface{}{
-		"from":       from,
-		"raw_email":  raw,
-		"recipients": tos,
-	}).Logger()
-
-	logger.Debug().Msg("sending email")
-
+func (s *SMTP) execTransaction(logger zerolog.Logger, from string, tos []string, raw []byte) error {
+	logger.Debug().Str("from", from).Msg("sending MAIL FROM cmd")
 	if err := s.client.Mail(from); err != nil {
 		logger.Error().Err(err).Msg("failed to issue MAIL FROM cmd")
 		return err
 	}
 
 	for _, to := range tos {
+		logger.Debug().Str("to", to).Msg("sending RCPT cmd")
 		if err := s.client.Rcpt(to); err != nil {
 			logger.Error().Err(err).Msg("failed to issue RCPT cmd")
 			return err
 		}
 	}
 
+	logger.Debug().Msg("sending DATA cmd")
 	w, err := s.client.Data()
 	if err != nil {
 		logger.Error().Err(err).Msg("failed to issue DATA cmd")
@@ -134,12 +130,11 @@ func (s *SMTP) execTransaction(from string, tos []string, raw []byte) error {
 	}
 	defer w.Close()
 
+	logger.Debug().Bytes("data", raw).Msg("writing data")
 	if _, err := w.Write(raw); err != nil {
 		logger.Error().Err(err).Msg("failed to write DATA")
 		return err
 	}
-
-	logger.Debug().Msg("email sent")
 	return nil
 }
 

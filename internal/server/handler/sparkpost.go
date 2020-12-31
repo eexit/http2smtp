@@ -10,7 +10,6 @@ import (
 
 	"github.com/eexit/httpsmtp/internal/converter"
 	"github.com/eexit/httpsmtp/internal/smtp"
-	"github.com/rs/zerolog/hlog"
 )
 
 type results struct {
@@ -25,8 +24,6 @@ func SparkPost(sender *smtp.SMTP) http.HandlerFunc {
 	const idLenght = 10000000000000000
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		logger := *(hlog.FromRequest(r))
-
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -42,7 +39,7 @@ func SparkPost(sender *smtp.SMTP) http.HandlerFunc {
 			return
 		}
 
-		sent, err := sender.WithLogger(logger).Send(r.Context(), mail)
+		sent, err := sender.Send(r.Context(), mail)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			(json.NewEncoder(w).Encode(map[string]string{"error": err.Error()}))
