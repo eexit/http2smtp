@@ -22,40 +22,41 @@ type results struct {
 // SparkPost handles SparkPost transmission API calls
 func SparkPost(sender *smtp.SMTP) http.HandlerFunc {
 	spCvtr := converter.NewSparkPostTransmission()
+	const idLenght = 10000000000000000
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger := *(hlog.FromRequest(r))
 
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
-			w.WriteHeader(500)
-			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+			w.WriteHeader(http.StatusInternalServerError)
+			(json.NewEncoder(w).Encode(map[string]string{"error": err.Error()}))
 			return
 		}
 		defer r.Body.Close()
 
 		mail, err := spCvtr.Convert(bytes.NewReader(body))
 		if err != nil {
-			w.WriteHeader(400)
-			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+			w.WriteHeader(http.StatusBadRequest)
+			(json.NewEncoder(w).Encode(map[string]string{"error": err.Error()}))
 			return
 		}
 
 		sent, err := sender.WithLogger(logger).Send(r.Context(), mail)
 		if err != nil {
-			w.WriteHeader(500)
-			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+			w.WriteHeader(http.StatusInternalServerError)
+			(json.NewEncoder(w).Encode(map[string]string{"error": err.Error()}))
 			return
 		}
 
-		w.WriteHeader(201)
-		json.NewEncoder(w).Encode(struct {
+		w.WriteHeader(http.StatusCreated)
+		(json.NewEncoder(w).Encode(struct {
 			Results results `json:"results"`
 		}{
 			Results: results{
 				TotalAcceptedRecipients: sent,
-				ID:                      strconv.Itoa(rand.Intn(10000000000000000)),
+				ID:                      strconv.Itoa(rand.Intn(idLenght)),
 			},
-		})
+		}))
 	}
 }

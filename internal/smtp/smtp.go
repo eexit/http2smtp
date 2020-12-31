@@ -31,13 +31,13 @@ type SMTP struct {
 func NewSMTP(host, port string, logger zerolog.Logger) *SMTP {
 	addr := host + ":" + port
 	logger = logger.With().Dict(
-		"forwarder", zerolog.Dict().
+		"smtp", zerolog.Dict().
 			Fields(map[string]interface{}{
 				"id":   "go:net/smtp",
 				"addr": addr,
 			})).Logger()
 
-	logger.Info().Msg("dialing to smtp server...")
+	logger.Info().Msg("dialing to smtp server")
 
 	client, err := smtp.Dial(addr)
 	if err != nil {

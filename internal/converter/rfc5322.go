@@ -21,7 +21,7 @@ func (rfc *rfc5322) Convert(data io.ReadSeeker) (*Message, error) {
 	}
 
 	// Resets the reader
-	data.Seek(io.SeekStart, io.SeekStart)
+	(data.Seek(0, 0))
 
 	return NewMessage(
 		m.Header.Get("From"),
