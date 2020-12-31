@@ -9,15 +9,11 @@ import (
 	"time"
 
 	"github.com/eexit/httpsmtp/internal/env"
-	"github.com/eexit/httpsmtp/internal/server/handler"
 	"github.com/eexit/httpsmtp/internal/smtp"
-	"github.com/gorilla/mux"
-	"github.com/justinas/alice"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/hlog"
 )
 
-// Version receives its from compile time
+// Version receives its value at compile time
 var Version string
 
 // Server is the app entry point: it contains the HTTP server, config and services
@@ -105,58 +101,4 @@ func (s *Server) Serve() error {
 	}
 	s.logger.Info().Msg("server stopped")
 	return nil
-}
-
-// routeHandler returns the app routes
-func (s *Server) routeHandler() http.Handler {
-	r := mux.NewRouter()
-
-	r.Handle("/healthcheck", handler.Healthcheck()).
-		Methods(http.MethodHead, http.MethodGet)
-
-	r.Handle("/sparkpost/api/v1/transmissions", handler.SparkPost(s.smtpClient)).
-		Methods(http.MethodPost)
-
-	return r
-}
-
-func (s *Server) wrap(fn http.Handler) http.Handler {
-	return alice.New().
-		Append(
-			hlog.NewHandler(s.logger),
-			hlog.CustomHeaderHandler("trace_id", s.env.HTTPTraceHeader),
-			hlog.MethodHandler("verb"),
-			hlog.RemoteAddrHandler("ip"),
-			hlog.UserAgentHandler("user_agent"),
-			hlog.URLHandler("url"),
-			contentTypeResponseHandler("application/json"),
-			hlog.AccessHandler(func(r *http.Request, code, size int, duration time.Duration) {
-				var level zerolog.Level
-				switch {
-				case code < 300:
-					level = zerolog.InfoLevel
-				case code >= 300 && code < 400:
-					level = zerolog.WarnLevel
-				case code >= 400 && code < 500:
-					level = zerolog.ErrorLevel
-				case code > 500:
-					level = zerolog.FatalLevel
-				}
-				hlog.FromRequest(r).
-					WithLevel(level).
-					Int("code", code).
-					Int("size", size).
-					Dur("duration", duration).
-					Msg("served request")
-			}),
-		).Then(fn)
-}
-
-func contentTypeResponseHandler(contentType string) func(next http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("content-type", contentType)
-			next.ServeHTTP(w, r)
-		})
-	}
 }
