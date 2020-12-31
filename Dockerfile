@@ -13,6 +13,6 @@ RUN CGO_ENABLED=0 GOOS=linux go build \
 
 FROM scratch
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
-EXPOSE 8080
 COPY --from=builder /httpsmtp /
+EXPOSE 8080
 CMD ["/httpsmtp"]

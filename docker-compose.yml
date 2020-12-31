@@ -1,0 +1,17 @@
+services:
+  httpsmtp:
+    build:
+      context: .
+      args:
+        version: v0.1.0
+    env_file: .env
+    ports:
+      - 8080:8080
+    depends_on:
+      smtp:
+        condition: service_started
+  smtp:
+    image: mailhog/mailhog
+    ports:
+      - 1025:1025
+      - 8025:8025
