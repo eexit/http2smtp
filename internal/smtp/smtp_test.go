@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/eexit/httpsmtp/internal/converter"
+	"github.com/eexit/httpsmtp/internal/ctx"
 	"github.com/rs/zerolog"
 )
 
@@ -195,7 +196,7 @@ func TestSMTP_Send(t *testing.T) {
 				data: dataOK,
 			},
 			args: args{
-				ctx: context.Background(),
+				ctx: func() context.Context { return ctx.WithTraceID(context.Background(), "trace_id") }(),
 				msg: converter.NewMessage("from@example.com", []string{"to@example.com"}, nil, nil, strings.NewReader("")),
 			},
 			accepted: 1,
@@ -274,6 +275,35 @@ func TestSMTP_Send(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestClose(t *testing.T) {
+	t.Run("SMTP close ok", func(t *testing.T) {
+		s := &SMTP{
+			client: &fakeSMTP{
+				close: func() error {
+					return nil
+				},
+			},
+		}
+		if err := s.Close(); err != nil {
+			t.Errorf("SMTP.Close() = %v, want nil", err)
+		}
+	})
+
+	t.Run("SMTP close error", func(t *testing.T) {
+		wantErr := errors.New("closing error")
+		s := &SMTP{
+			client: &fakeSMTP{
+				close: func() error {
+					return wantErr
+				},
+			},
+		}
+		if err := s.Close(); err == nil {
+			t.Errorf("SMTP.Close() = nil, want %v", wantErr)
+		}
+	})
 }
 
 func Test_buildRcptLists(t *testing.T) {
