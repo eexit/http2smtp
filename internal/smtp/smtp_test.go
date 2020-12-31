@@ -353,7 +353,7 @@ type smtpSender struct {
 
 // Copied from smtp/smtp_test.go
 func (s smtpSender) send(f string) {
-	s.w.Write([]byte(f + "\r\n"))
+	(s.w.Write([]byte(f + "\r\n")))
 }
 
 var (
