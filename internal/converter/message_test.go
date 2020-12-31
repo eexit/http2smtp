@@ -66,6 +66,35 @@ func TestNewMessage(t *testing.T) {
 	}
 }
 
+func TestMessage_From(t *testing.T) {
+	tests := []struct {
+		name string
+		from string
+		want string
+	}{
+		{
+			name: "empty from",
+			from: "",
+			want: "",
+		},
+		{
+			name: "non-empty from",
+			from: "from@example.com",
+			want: "from@example.com",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m := &Message{
+				from: tt.from,
+			}
+			if got := m.From(); got != tt.want {
+				t.Errorf("Message.From() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestMessage_Getters(t *testing.T) {
 	type fields struct {
 		to  []string

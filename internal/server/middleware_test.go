@@ -1,6 +1,7 @@
 package server
 
 import (
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -8,6 +9,8 @@ import (
 	"time"
 
 	"github.com/eexit/httpsmtp/internal/ctx"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/hlog"
 )
 
 type handlerTester struct {
@@ -131,9 +134,10 @@ func Test_traceIDHeaderHandler(t *testing.T) {
 			}
 
 			handler := traceIDHeaderHandler(tt.args.seekForHeader)
+			logHandler := hlog.NewHandler(zerolog.New(ioutil.Discard).With().Logger())
 
 			// Creates a fake server that wraps tester with our handler
-			ts := httptest.NewServer(handler(tester))
+			ts := httptest.NewServer(logHandler(handler(tester)))
 			defer ts.Close()
 
 			client := &http.Client{Timeout: 2 * time.Second}
