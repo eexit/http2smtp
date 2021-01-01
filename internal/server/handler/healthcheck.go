@@ -6,9 +6,9 @@ import (
 )
 
 // Healthcheck handles healthcheck route
-func Healthcheck() http.HandlerFunc {
+func Healthcheck(version string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		(json.NewEncoder(w).Encode("I am alive"))
+		(json.NewEncoder(w).Encode(map[string]string{"version": version}))
 	}
 }

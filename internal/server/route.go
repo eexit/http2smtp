@@ -11,7 +11,7 @@ import (
 func (s *Server) routeHandler() http.Handler {
 	r := mux.NewRouter()
 
-	r.Handle("/healthcheck", handler.Healthcheck()).
+	r.Handle("/healthcheck", handler.Healthcheck(Version)).
 		Methods(http.MethodHead, http.MethodGet)
 
 	r.Handle("/sparkpost/api/v1/transmissions", handler.SparkPost(s.smtpClient)).
