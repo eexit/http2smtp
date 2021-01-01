@@ -1,10 +1,13 @@
 package server
 
 import (
+	"bytes"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"regexp"
+	"strings"
 	"testing"
 	"time"
 
@@ -13,12 +16,65 @@ import (
 	"github.com/rs/zerolog/hlog"
 )
 
-type handlerTester struct {
-	assertion func(w http.ResponseWriter, r *http.Request)
-}
+func Test_wrap(t *testing.T) {
+	tests := []struct {
+		name string
+		code int
+		want string
+	}{
+		{
+			name: "code ok",
+			code: http.StatusOK,
+			want: `{"level":"info","verb":"GET","ip":"127.0.0.1","user_agent":"Go-http-client/1.1","url":"/","code":200,"size":0,"message":"served request"}`,
+		},
+		{
+			name: "code not modified",
+			code: http.StatusNotModified,
+			want: `{"level":"warn","verb":"GET","ip":"127.0.0.1","user_agent":"Go-http-client/1.1","url":"/","code":304,"size":0,"message":"served request"}`,
+		},
+		{
+			name: "code bad request",
+			code: http.StatusBadRequest,
+			want: `{"level":"error","verb":"GET","ip":"127.0.0.1","user_agent":"Go-http-client/1.1","url":"/","code":400,"size":0,"message":"served request"}`,
+		},
+		{
+			name: "code internal server error",
+			code: http.StatusInternalServerError,
+			want: string(`{"level":"fatal","verb":"GET","ip":"127.0.0.1","user_agent":"Go-http-client/1.1","url":"/","code":500,"size":0,"message":"served request"}`),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tester := &handlerTester{
+				assertion: func(w http.ResponseWriter, r *http.Request) {
+					w.WriteHeader(tt.code)
+				},
+			}
 
-func (ht *handlerTester) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	ht.assertion(w, r)
+			out := &bytes.Buffer{}
+			s := &Server{logger: zerolog.New(out)}
+
+			// Creates a fake server that wraps tester with our handler
+			ts := httptest.NewServer(s.wrap(tester))
+			defer ts.Close()
+
+			// Do a dummy request
+			resp, err := http.Get(ts.URL)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer resp.Body.Close()
+
+			got := strings.TrimSpace(out.String())
+			// Remove the duration as this will vary
+			m := regexp.MustCompile("\"duration\":\\d+(\\.\\d+)?,")
+			got = m.ReplaceAllString(got, "")
+
+			if got != tt.want {
+				t.Errorf("wrap() = %#v, want %#v", got, tt.want)
+			}
+		})
+	}
 }
 
 func Test_responseHeaderHandler(t *testing.T) {
@@ -161,4 +217,12 @@ func Test_traceIDHeaderHandler(t *testing.T) {
 			defer resp.Body.Close()
 		})
 	}
+}
+
+type handlerTester struct {
+	assertion func(w http.ResponseWriter, r *http.Request)
+}
+
+func (ht *handlerTester) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	ht.assertion(w, r)
 }

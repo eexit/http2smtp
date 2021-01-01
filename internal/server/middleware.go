@@ -29,7 +29,7 @@ func (s *Server) wrap(fn http.Handler) http.Handler {
 					level = zerolog.WarnLevel
 				case code >= http.StatusBadRequest && code < http.StatusInternalServerError:
 					level = zerolog.ErrorLevel
-				case code > http.StatusInternalServerError:
+				case code >= http.StatusInternalServerError:
 					level = zerolog.FatalLevel
 				}
 				hlog.FromRequest(r).
