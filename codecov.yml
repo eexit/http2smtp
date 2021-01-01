@@ -2,3 +2,6 @@ coverage:
   precision: 2
   round: down
   range: "50...90"
+ignore:
+  - internal/env
+  - internal/server/route.go
