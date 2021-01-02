@@ -4,4 +4,5 @@ coverage:
   range: "50...90"
 ignore:
   - internal/env
+  - internal/server/server.go
   - internal/server/route.go

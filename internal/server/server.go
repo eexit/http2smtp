@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/eexit/httpsmtp/internal/converter"
 	"github.com/eexit/httpsmtp/internal/env"
 	"github.com/eexit/httpsmtp/internal/smtp"
 	"github.com/rs/zerolog"
@@ -18,12 +19,13 @@ var Version string
 
 // Server is the app entry point: it contains the HTTP server, config and services
 type Server struct {
-	svr         *http.Server
-	logger      zerolog.Logger
-	shutdownCtx context.Context
-	cancelFunc  context.CancelFunc
-	smtpClient  *smtp.SMTP
-	env         env.Bag
+	svr               *http.Server
+	logger            zerolog.Logger
+	shutdownCtx       context.Context
+	cancelFunc        context.CancelFunc
+	smtpClient        smtp.Client
+	converterProvider converter.Provider
+	env               env.Bag
 }
 
 // New returns a new http server for the API
@@ -47,14 +49,20 @@ func New(e env.Bag) *Server {
 
 	logger.Info().Msg("app is starting")
 
-	smtpClient := smtp.NewSMTP(e.SMTPAddr, logger)
+	smtpClient := smtp.New(e.SMTPAddr, logger)
+
+	converterProvider := converter.NewProvider(
+		converter.NewRFC5322(),
+		converter.NewSparkPost(),
+	)
 
 	svr := &Server{
-		cancelFunc:  cancel,
-		logger:      logger,
-		shutdownCtx: ctx,
-		smtpClient:  smtpClient,
-		env:         e,
+		cancelFunc:        cancel,
+		logger:            logger,
+		shutdownCtx:       ctx,
+		smtpClient:        smtpClient,
+		converterProvider: converterProvider,
+		env:               e,
 	}
 
 	svr.svr = &http.Server{

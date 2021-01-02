@@ -7,11 +7,18 @@ import (
 	"strings"
 )
 
+// RFC5322ID is the ID for RFC5322 converter
+const RFC5322ID ID = "rfc5322"
+
 type rfc5322 struct{}
 
 // NewRFC5322 returns a new message converter for RFC 5322 format
 func NewRFC5322() Converter {
 	return &rfc5322{}
+}
+
+func (rfc *rfc5322) ID() ID {
+	return RFC5322ID
 }
 
 func (rfc *rfc5322) Convert(data io.ReadSeeker) (*Message, error) {

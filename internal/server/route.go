@@ -14,7 +14,7 @@ func (s *Server) routeHandler() http.Handler {
 	r.Handle("/healthcheck", handler.Healthcheck(Version)).
 		Methods(http.MethodHead, http.MethodGet)
 
-	r.Handle("/sparkpost/api/v1/transmissions", handler.SparkPost(s.smtpClient)).
+	r.Handle("/sparkpost/api/v1/transmissions", handler.SparkPost(s.smtpClient, s.converterProvider)).
 		Methods(http.MethodPost)
 
 	return r

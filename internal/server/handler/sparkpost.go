@@ -12,6 +12,8 @@ import (
 	"github.com/eexit/httpsmtp/internal/smtp"
 )
 
+const idLenght = 10000000000000000
+
 type results struct {
 	ID                      string `json:"id"`
 	TotalAcceptedRecipients int    `json:"total_accepted_recipients"`
@@ -19,9 +21,7 @@ type results struct {
 }
 
 // SparkPost handles SparkPost transmission API calls
-func SparkPost(sender *smtp.SMTP) http.HandlerFunc {
-	spCvtr := converter.NewSparkPostTransmission()
-	const idLenght = 10000000000000000
+func SparkPost(smtpClient smtp.Client, converterProvider converter.Provider) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := ioutil.ReadAll(r.Body)
@@ -32,14 +32,21 @@ func SparkPost(sender *smtp.SMTP) http.HandlerFunc {
 		}
 		defer r.Body.Close()
 
-		mail, err := spCvtr.Convert(bytes.NewReader(body))
+		converter, err := converterProvider.Get(converter.SparkPostID)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			(json.NewEncoder(w).Encode(map[string]string{"error": err.Error()}))
+			return
+		}
+
+		message, err := converter.Convert(bytes.NewReader(body))
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			(json.NewEncoder(w).Encode(map[string]string{"error": err.Error()}))
 			return
 		}
 
-		sent, err := sender.Send(r.Context(), mail)
+		sentCount, err := smtpClient.Send(r.Context(), message)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			(json.NewEncoder(w).Encode(map[string]string{"error": err.Error()}))
@@ -51,7 +58,7 @@ func SparkPost(sender *smtp.SMTP) http.HandlerFunc {
 			Results results `json:"results"`
 		}{
 			Results: results{
-				TotalAcceptedRecipients: sent,
+				TotalAcceptedRecipients: sentCount,
 				ID:                      strconv.Itoa(rand.Intn(idLenght)),
 			},
 		}))

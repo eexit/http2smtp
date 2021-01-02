@@ -15,7 +15,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func TestNewSMTP(t *testing.T) {
+func TestNew(t *testing.T) {
 	t.Run("constructor fails to dial to SMTP server", func(t *testing.T) {
 		defer func() {
 			if r := recover(); r == nil {
@@ -23,14 +23,14 @@ func TestNewSMTP(t *testing.T) {
 			}
 		}()
 
-		NewSMTP("::", zerolog.New(ioutil.Discard))
+		New("::", zerolog.New(ioutil.Discard))
 	})
 
-	t.Run("SMTP dial ok", func(t *testing.T) {
+	t.Run("new client dials ok", func(t *testing.T) {
 		ln := newLocalListener(t)
 		defer ln.Close()
 
-		go NewSMTP(ln.Addr().String(), zerolog.New(ioutil.Discard))
+		go New(ln.Addr().String(), zerolog.New(ioutil.Discard))
 
 		conn, err := ln.Accept()
 		if err != nil {
@@ -56,7 +56,7 @@ func TestNewSMTP(t *testing.T) {
 				}
 				errc <- nil
 			}()
-			NewSMTP(ln.Addr().String(), zerolog.New(ioutil.Discard))
+			New(ln.Addr().String(), zerolog.New(ioutil.Discard))
 		}()
 
 		conn, err := ln.Accept()

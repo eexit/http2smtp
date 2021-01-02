@@ -21,6 +21,12 @@ type goSMTP interface {
 	Close() error
 }
 
+// Client exposes the methods of the SMTP client
+type Client interface {
+	Send(ctx context.Context, msg *converter.Message) (int, error)
+	Close() error
+}
+
 // SMTP wraps SMTP email sending
 type SMTP struct {
 	addr   string
@@ -28,8 +34,8 @@ type SMTP struct {
 	logger zerolog.Logger
 }
 
-// NewSMTP creates a new Go native SMTP
-func NewSMTP(addr string, logger zerolog.Logger) *SMTP {
+// New creates a new Go native SMTP client
+func New(addr string, logger zerolog.Logger) Client {
 	logger = logger.With().Dict(
 		"smtp", zerolog.Dict().
 			Fields(map[string]interface{}{

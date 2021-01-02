@@ -8,7 +8,7 @@ import (
 )
 
 func Test_NewRFC5322(t *testing.T) {
-	t.Run("constructor returns a converted", func(t *testing.T) {
+	t.Run("constructor returns a converter", func(t *testing.T) {
 		want := &rfc5322{}
 
 		if got := NewRFC5322(); !reflect.DeepEqual(got, want) {
@@ -18,25 +18,6 @@ func Test_NewRFC5322(t *testing.T) {
 }
 
 func Test_rfc5322_Convert(t *testing.T) {
-	simpleMessage := strings.NewReader(`From: Test <test@example.com>
-To: Bob <bob@example.com>
-Subject: Hello world!
-
-Hello world!`)
-
-	messageWithCc := strings.NewReader(`From: Test <test@example.com>
-To: Bob <bob@example.com>
-Cc: Alice <alice@example.com>, bob@example.com
-Subject: Hello world!
-
-Hello world!`)
-
-	messageWithBcc := strings.NewReader(`From: Test <test@example.com>
-Bcc: Bob <bob@example.com>,Alice <alice@example.com>
-Subject: Hello world!
-
-Hello world!`)
-
 	tests := []struct {
 		name    string
 		data    io.ReadSeeker
@@ -95,3 +76,22 @@ Hello world!`)
 		})
 	}
 }
+
+var simpleMessage = strings.NewReader(`From: Test <test@example.com>
+To: Bob <bob@example.com>
+Subject: Hello world!
+
+Hello world!`)
+
+var messageWithCc = strings.NewReader(`From: Test <test@example.com>
+To: Bob <bob@example.com>
+Cc: Alice <alice@example.com>, bob@example.com
+Subject: Hello world!
+
+Hello world!`)
+
+var messageWithBcc = strings.NewReader(`From: Test <test@example.com>
+Bcc: Bob <bob@example.com>,Alice <alice@example.com>
+Subject: Hello world!
+
+Hello world!`)
