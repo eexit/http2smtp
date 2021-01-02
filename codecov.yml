@@ -2,7 +2,18 @@ coverage:
   precision: 2
   round: down
   range: "50...90"
+  status:
+    project:
+      default:
+        target: 75%
+        threshold: 5%
+        only_pulls: true
+    patch:
+      default:
+        target: 60%
+        threshold: 10%
 ignore:
   - internal/env
   - internal/server/server.go
   - internal/server/route.go
+
