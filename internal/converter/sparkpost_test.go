@@ -206,6 +206,6 @@ func Test_spt10n_rfc822ToMessage(t *testing.T) {
 
 func toString(i io.ReadSeeker) string {
 	s, _ := ioutil.ReadAll(i)
-	defer i.Seek(0, 0) // rewind because the same content will be read another time
+	(i.Seek(0, 0)) // rewind because the same content will be read another time
 	return string(s)
 }

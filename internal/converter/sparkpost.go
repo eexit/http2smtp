@@ -34,11 +34,7 @@ type Content struct {
 	EmailRFC822 string `json:"email_rfc822"`
 }
 
-var val *validator.Validate
-
-func init() {
-	val = validator.New()
-}
+var val = validator.New()
 
 type spt10n struct {
 	rfc5322Converter Converter

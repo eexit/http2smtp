@@ -22,7 +22,6 @@ type results struct {
 
 // SparkPost handles SparkPost transmission API calls
 func SparkPost(smtpClient smtp.Client, converterProvider converter.Provider) http.HandlerFunc {
-
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {

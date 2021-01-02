@@ -8,10 +8,6 @@ import (
 )
 
 func TestNewProvider(t *testing.T) {
-	baseProvider := provider{
-		mux: sync.Mutex{},
-	}
-
 	tests := []struct {
 		name       string
 		converters []Converter
@@ -20,37 +16,34 @@ func TestNewProvider(t *testing.T) {
 		{
 			name:       "no converter given",
 			converters: []Converter{},
-			want:       &baseProvider,
+			want:       &provider{mux: sync.Mutex{}},
 		},
 		{
 			name:       "1 converter given",
 			converters: []Converter{&testConverter{}},
-			want: func() Provider {
-				p := baseProvider
-				p.converters = map[ID]Converter{testConverterID: &testConverter{}}
-				return &p
-			}(),
+			want: &provider{
+				mux:        sync.Mutex{},
+				converters: map[ID]Converter{testConverterID: &testConverter{}},
+			},
 		},
 		{
 			name:       "duplicate converters given",
 			converters: []Converter{&testConverter{}, &testConverter{}},
-			want: func() Provider {
-				p := baseProvider
-				p.converters = map[ID]Converter{testConverterID: &testConverter{}}
-				return &p
-			}(),
+			want: &provider{
+				mux:        sync.Mutex{},
+				converters: map[ID]Converter{testConverterID: &testConverter{}},
+			},
 		},
 		{
 			name:       "2 different converters given",
 			converters: []Converter{&testConverter{}, &rfc5322{}},
-			want: func() Provider {
-				p := baseProvider
-				p.converters = map[ID]Converter{
+			want: &provider{
+				mux: sync.Mutex{},
+				converters: map[ID]Converter{
 					testConverterID: &testConverter{},
 					RFC5322ID:       &rfc5322{},
-				}
-				return &p
-			}(),
+				},
+			},
 		},
 	}
 	for _, tt := range tests {
@@ -154,7 +147,6 @@ func Test_provider_Get(t *testing.T) {
 const testConverterID ID = "testConverter"
 
 type testConverter struct {
-	id      string
 	message *Message
 	err     error
 }
