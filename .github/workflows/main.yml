@@ -4,7 +4,6 @@ on:
     branches: [ master ]
     tags: [ 'v[0-9]+.[0-9]+.[0-9]+*' ]
   pull_request:
-    branches: [ master ]
 jobs:
   tests:
     name: Unit tests + coverage
@@ -40,7 +39,6 @@ jobs:
         with:
           version: v1.34
   publish:
-    # Only when there's a tag
     if: contains(github.ref, 'refs/tags/')
     name: Docker publish
     runs-on: ubuntu-latest
@@ -61,5 +59,11 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           build-args: version=${{ steps.tagref.outputs.tag }}+${{ github.sha }}
-          tags: '${{ github.repository }}:${{ steps.tagref.outputs.tag }}'
+          tags: '${{ github.repository }}:${{ steps.tagref.outputs.tag }},${{ github.repository }}:latest'
           push: true
+      - name: Update repo description
+        uses: peter-evans/dockerhub-description@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: ${{ github.repository }}
