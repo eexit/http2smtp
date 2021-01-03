@@ -1,4 +1,4 @@
-name: httpsmtp
+name: http2smtp
 on:
   push:
     branches: [ master ]
@@ -6,7 +6,7 @@ on:
     branches: [ master ]
 jobs:
   tests:
-    name: tests
+    name: Unit tests + coverage
     runs-on: ubuntu-latest
     steps:
     - name: Set up Go 1.x
@@ -29,8 +29,8 @@ jobs:
         flags: unittests
         name: codecov-umbrella
         fail_ci_if_error: true
-  golangci:
-    name: lint
+  lint:
+    name: Go linting
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2

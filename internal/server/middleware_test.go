@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/eexit/httpsmtp/internal/ctx"
+	"github.com/eexit/http2smtp/internal/ctx"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/hlog"
 )

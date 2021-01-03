@@ -3,16 +3,16 @@ RUN apk --update add ca-certificates
 RUN update-ca-certificates
 ARG version
 LABEL version=${version}
-WORKDIR /go/src/github.com/eexit/httpsmtp
+WORKDIR /go/src/github.com/eexit/http2smtp
 COPY . .
 # Inject the build version: https://blog.alexellis.io/inject-build-time-vars-golang/
 RUN CGO_ENABLED=0 GOOS=linux go build \
-    -ldflags "-X github.com/eexit/httpsmtp/internal/server.Version=${version}" \
-    -o /httpsmtp \
-    ./cmd/httpsmtp
+    -ldflags "-X github.com/eexit/http2smtp/internal/server.Version=${version}" \
+    -o /http2smtp \
+    ./cmd/http2smtp
 
 FROM scratch
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
-COPY --from=builder /httpsmtp /
+COPY --from=builder /http2smtp /
 EXPOSE 8080
-CMD ["/httpsmtp"]
+CMD ["/http2smtp"]

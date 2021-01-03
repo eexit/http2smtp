@@ -7,8 +7,8 @@ import (
 	"io"
 	"net/smtp"
 
-	"github.com/eexit/httpsmtp/internal/converter"
-	ictx "github.com/eexit/httpsmtp/internal/ctx"
+	"github.com/eexit/http2smtp/internal/converter"
+	ictx "github.com/eexit/http2smtp/internal/ctx"
 	"github.com/rs/zerolog"
 )
 

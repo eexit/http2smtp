@@ -1,4 +1,4 @@
-module github.com/eexit/httpsmtp
+module github.com/eexit/http2smtp
 
 go 1.15
 

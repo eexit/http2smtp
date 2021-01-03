@@ -1,5 +1,5 @@
 services:
-  httpsmtp:
+  http2smtp:
     build:
       context: .
       args:

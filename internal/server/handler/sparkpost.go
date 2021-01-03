@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/eexit/httpsmtp/internal/converter"
-	"github.com/eexit/httpsmtp/internal/smtp"
+	"github.com/eexit/http2smtp/internal/converter"
+	"github.com/eexit/http2smtp/internal/smtp"
 )
 
 const idLenght = 10000000000000000

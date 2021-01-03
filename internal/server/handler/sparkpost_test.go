@@ -12,8 +12,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/eexit/httpsmtp/internal/converter"
-	"github.com/eexit/httpsmtp/internal/smtp"
+	"github.com/eexit/http2smtp/internal/converter"
+	"github.com/eexit/http2smtp/internal/smtp"
 )
 
 func TestSparkPost(t *testing.T) {

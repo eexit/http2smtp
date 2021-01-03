@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/eexit/httpsmtp/internal/converter"
-	"github.com/eexit/httpsmtp/internal/ctx"
+	"github.com/eexit/http2smtp/internal/converter"
+	"github.com/eexit/http2smtp/internal/ctx"
 	"github.com/rs/zerolog"
 )
 

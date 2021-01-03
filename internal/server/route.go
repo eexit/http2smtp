@@ -3,7 +3,7 @@ package server
 import (
 	"net/http"
 
-	"github.com/eexit/httpsmtp/internal/server/handler"
+	"github.com/eexit/http2smtp/internal/server/handler"
 	"github.com/gorilla/mux"
 )
 

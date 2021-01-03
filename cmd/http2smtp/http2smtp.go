@@ -5,8 +5,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/eexit/httpsmtp/internal/env"
-	"github.com/eexit/httpsmtp/internal/server"
+	"github.com/eexit/http2smtp/internal/env"
+	"github.com/eexit/http2smtp/internal/server"
 	"github.com/kelseyhightower/envconfig"
 )
 
