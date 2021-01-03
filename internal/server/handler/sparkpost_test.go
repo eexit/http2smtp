@@ -47,16 +47,16 @@ func TestSparkPost(t *testing.T) {
 			wantBody: `{"error":"converter ID sparkpost not found"}`,
 		},
 		{
-			name: "convertion failed",
+			name: "conversion failed",
 			args: args{
 				converterProvider: converter.NewProvider(&converter.Stub{
 					StubID: converter.SparkPostID,
-					Err:    errors.New("convertion failed"),
+					Err:    errors.New("conversion failed"),
 				}),
 				requestBody: bytes.NewReader([]byte{}),
 			},
 			wantCode: http.StatusBadRequest,
-			wantBody: `{"error":"convertion failed"}`,
+			wantBody: `{"error":"conversion failed"}`,
 		},
 		{
 			name: "send error",

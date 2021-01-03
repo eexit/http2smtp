@@ -16,7 +16,7 @@ type Stub struct {
 // or returns the default StubConverterID otherwise
 func (s *Stub) ID() ID {
 	if s.StubID != "" {
-		return ID(s.StubID)
+		return s.StubID
 	}
 	return StubConverterID
 }
