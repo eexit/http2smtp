@@ -6,6 +6,15 @@ on:
   pull_request:
     branches: [ master ]
 jobs:
+  debug:
+    name: Debug info
+    steps:
+      - name: Output Information
+        run: |
+          echo "****************************************************"
+          echo "Event name: ${{ github.event_name }}"
+          echo "Action type: ${{ github.event.action }}"
+          echo "****************************************************"
   tests:
     name: Unit tests + coverage
     runs-on: ubuntu-latest
