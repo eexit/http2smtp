@@ -43,7 +43,7 @@ jobs:
     name: Docker publish
     if: github.event_name == 'release'
     needs: [tests, lint]
-    run-on: ubuntu-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Set up Docker Buildx
