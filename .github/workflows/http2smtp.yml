@@ -8,6 +8,7 @@ on:
 jobs:
   debug:
     name: Debug info
+    runs-on: ubuntu-latest
     steps:
       - name: Output Information
         run: |
