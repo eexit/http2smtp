@@ -60,6 +60,6 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v2
         with:
-          build-args: version=${{ steps.tagref.outputs.tag }}
-          tags: '${{ github.repository }}:${{ steps.tagref.outputs.tag }}+${{ github.sha }}'
+          build-args: version=${{ steps.tagref.outputs.tag }}+${{ github.sha }}
+          tags: '${{ github.repository }}:${{ steps.tagref.outputs.tag }}'
           push: true
