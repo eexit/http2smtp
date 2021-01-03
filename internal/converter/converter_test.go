@@ -1,7 +1,6 @@
 package converter
 
 import (
-	"io"
 	"reflect"
 	"sync"
 	"testing"
@@ -20,27 +19,27 @@ func TestNewProvider(t *testing.T) {
 		},
 		{
 			name:       "1 converter given",
-			converters: []Converter{&testConverter{}},
+			converters: []Converter{&Stub{}},
 			want: &provider{
 				mux:        sync.Mutex{},
-				converters: map[ID]Converter{testConverterID: &testConverter{}},
+				converters: map[ID]Converter{StubConverterID: &Stub{}},
 			},
 		},
 		{
 			name:       "duplicate converters given",
-			converters: []Converter{&testConverter{}, &testConverter{}},
+			converters: []Converter{&Stub{}, &Stub{}},
 			want: &provider{
 				mux:        sync.Mutex{},
-				converters: map[ID]Converter{testConverterID: &testConverter{}},
+				converters: map[ID]Converter{StubConverterID: &Stub{}},
 			},
 		},
 		{
 			name:       "2 different converters given",
-			converters: []Converter{&testConverter{}, &rfc5322{}},
+			converters: []Converter{&Stub{}, &rfc5322{}},
 			want: &provider{
 				mux: sync.Mutex{},
 				converters: map[ID]Converter{
-					testConverterID: &testConverter{},
+					StubConverterID: &Stub{},
 					RFC5322ID:       &rfc5322{},
 				},
 			},
@@ -68,18 +67,23 @@ func Test_provider_IDs(t *testing.T) {
 		},
 		{
 			name:       "1 converter given",
-			converters: []Converter{&testConverter{}},
-			want:       []ID{testConverterID},
+			converters: []Converter{&Stub{}},
+			want:       []ID{StubConverterID},
 		},
 		{
 			name:       "duplicate converter given",
-			converters: []Converter{&testConverter{}, &testConverter{}},
-			want:       []ID{testConverterID},
+			converters: []Converter{&Stub{}, &Stub{}},
+			want:       []ID{StubConverterID},
 		},
 		{
 			name:       "several converters given",
-			converters: []Converter{&testConverter{}, &rfc5322{}},
-			want:       []ID{RFC5322ID, testConverterID},
+			converters: []Converter{&Stub{}, &rfc5322{}},
+			want:       []ID{RFC5322ID, StubConverterID},
+		},
+		{
+			name:       "IDs are returned in order",
+			converters: []Converter{&rfc5322{}, &Stub{}},
+			want:       []ID{RFC5322ID, StubConverterID},
 		},
 	}
 	for _, tt := range tests {
@@ -110,22 +114,22 @@ func Test_provider_Get(t *testing.T) {
 		{
 			name:       "requested converter does not exist",
 			converters: []Converter{},
-			cid:        testConverterID,
+			cid:        StubConverterID,
 			want:       nil,
 			wantErr:    true,
 		},
 		{
 			name:       "requested converter exist",
-			converters: []Converter{&testConverter{}},
-			cid:        testConverterID,
-			want:       &testConverter{},
+			converters: []Converter{&Stub{}},
+			cid:        StubConverterID,
+			want:       &Stub{},
 			wantErr:    false,
 		},
 		{
 			name:       "requested converter exist when there are several converters",
-			converters: []Converter{&rfc5322{}, &testConverter{}},
-			cid:        testConverterID,
-			want:       &testConverter{},
+			converters: []Converter{&rfc5322{}, &Stub{}},
+			cid:        StubConverterID,
+			want:       &Stub{},
 			wantErr:    false,
 		},
 	}
@@ -142,19 +146,4 @@ func Test_provider_Get(t *testing.T) {
 			}
 		})
 	}
-}
-
-const testConverterID ID = "testConverter"
-
-type testConverter struct {
-	message *Message
-	err     error
-}
-
-func (t *testConverter) ID() ID {
-	return testConverterID
-}
-
-func (t *testConverter) Convert(data io.ReadSeeker) (*Message, error) {
-	return t.message, t.err
 }

@@ -89,7 +89,7 @@ func Test_spt10n_rfc822ToMessage(t *testing.T) {
 		{
 			name:             "rfc5322 converter returns an error",
 			t10n:             &SparkPostTransmission{},
-			rfc5322Converter: &testConverter{err: errors.New("some error occurred")},
+			rfc5322Converter: &Stub{Err: errors.New("some error occurred")},
 			want:             nil,
 			wantErr:          true,
 		},
@@ -105,8 +105,8 @@ func Test_spt10n_rfc822ToMessage(t *testing.T) {
 					EmailRFC822: toString(simpleMessage),
 				},
 			},
-			rfc5322Converter: &testConverter{
-				message: &Message{from: "from@example.com"},
+			rfc5322Converter: &Stub{
+				Message: &Message{from: "from@example.com"},
 			},
 			want: NewMessage(
 				"from@example.com",
@@ -135,8 +135,8 @@ func Test_spt10n_rfc822ToMessage(t *testing.T) {
 					EmailRFC822: toString(messageWithCc),
 				},
 			},
-			rfc5322Converter: &testConverter{
-				message: &Message{from: "from@example.com"},
+			rfc5322Converter: &Stub{
+				Message: &Message{from: "from@example.com"},
 			},
 			want: NewMessage(
 				"from@example.com",
