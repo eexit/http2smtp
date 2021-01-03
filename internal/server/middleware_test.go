@@ -199,7 +199,7 @@ func Test_traceIDHeaderHandler(t *testing.T) {
 			client := &http.Client{Timeout: 2 * time.Second}
 
 			// Creates a new request
-			req, err := http.NewRequest("GET", ts.URL, nil)
+			req, err := http.NewRequest(http.MethodGet, ts.URL, nil)
 			if err != nil {
 				t.Fatal(err)
 			}
