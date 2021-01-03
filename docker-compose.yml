@@ -1,9 +1,10 @@
 services:
   http2smtp:
+    image: eexit/http2smtp
     build:
       context: .
       args:
-        version: v0.1.0
+        version: v0.1.0+dev
     env_file: .env
     ports:
       - 8080:8080

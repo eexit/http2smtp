@@ -13,7 +13,6 @@ coverage:
         target: 60%
         threshold: 10%
 ignore:
-  - internal/env
   - internal/server/server.go
   - internal/server/route.go
 
