@@ -10,22 +10,18 @@ import (
 
 func TestHealthcheck(t *testing.T) {
 	t.Run("route returns version with GET", func(t *testing.T) {
-		mux := http.NewServeMux()
-		mux.HandleFunc("/healthcheck", Healthcheck("v0.1.0-test"))
-		api := httptest.NewServer(mux)
-		defer api.Close()
+		handler := Healthcheck("v0.1.0-test")
 
-		resp, err := http.Get(api.URL + "/healthcheck")
-		if err != nil {
-			t.Errorf("could not request /healthcheck: %v", err)
-		}
-		defer resp.Body.Close()
+		w := httptest.NewRecorder()
+		r := httptest.NewRequest("GET", "/", nil)
 
-		if code := resp.StatusCode; code != http.StatusOK {
+		handler(w, r)
+
+		if code := w.Code; code != http.StatusOK {
 			t.Errorf("Healthcheck() returned status code %v, want %v", code, http.StatusOK)
 		}
 
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := ioutil.ReadAll(w.Body)
 		if err != nil {
 			t.Errorf("could not read response body: %v", err)
 		}
