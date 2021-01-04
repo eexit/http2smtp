@@ -89,7 +89,7 @@ func (s *smtpClient) Send(ctx context.Context, msg *converter.Message) (int, err
 	for _, tos := range buildRcptLists(msg) {
 		select {
 		case <-ctx.Done():
-			logger.Warn().Msg("process aborted")
+			logger.Warn().Msgf("process aborted: %s", ctx.Err())
 			return accepted, nil
 		default:
 			logger.Debug().Strs("tos", tos).Msg("executing transaction")
