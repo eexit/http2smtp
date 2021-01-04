@@ -10,7 +10,7 @@ import (
 	"github.com/eexit/http2smtp/internal/smtp"
 )
 
-func TestServer_routeHandler(t *testing.T) {
+func TestAPI_Mux(t *testing.T) {
 	tests := []struct {
 		name      string
 		method    string
@@ -49,7 +49,7 @@ func TestServer_routeHandler(t *testing.T) {
 				converterProvider: converter.NewProvider(&converter.Stub{StubID: converter.SparkPostID}),
 			}
 
-			api := httptest.NewServer(s.routeHandler())
+			api := httptest.NewServer(s.Mux())
 			defer api.Close()
 
 			req, err := http.NewRequest(tt.method, api.URL+tt.routePath, nil)

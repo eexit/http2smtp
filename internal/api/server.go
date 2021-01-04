@@ -78,7 +78,7 @@ func New(
 	svr.svr = &serverWrapper{
 		&http.Server{
 			Addr:         e.ServerHost + ":" + e.ServerPort,
-			Handler:      svr.wrap(svr.routeHandler()),
+			Handler:      svr.Wrap(svr.Mux()),
 			ReadTimeout:  30 * time.Second,
 			WriteTimeout: 30 * time.Second,
 			BaseContext: func(net.Listener) context.Context {

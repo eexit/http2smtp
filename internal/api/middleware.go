@@ -10,7 +10,8 @@ import (
 	"github.com/rs/zerolog/hlog"
 )
 
-func (a *API) wrap(fn http.Handler) http.Handler {
+// Wrap returns a HTTP handler wrapped by a middleware stack
+func (a *API) Wrap(fn http.Handler) http.Handler {
 	return alice.New().
 		Append(
 			hlog.NewHandler(a.logger),

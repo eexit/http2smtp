@@ -7,8 +7,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// routeHandler returns the app routes
-func (a *API) routeHandler() http.Handler {
+// Mux returns the app routes
+func (a *API) Mux() http.Handler {
 	r := mux.NewRouter()
 
 	r.Handle("/healthcheck", handler.Healthcheck(Version)).

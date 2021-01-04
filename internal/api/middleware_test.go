@@ -16,7 +16,7 @@ import (
 	"github.com/rs/zerolog/hlog"
 )
 
-func Test_wrap(t *testing.T) {
+func TestAPI_Wrap(t *testing.T) {
 	tests := []struct {
 		name string
 		code int
@@ -55,7 +55,7 @@ func Test_wrap(t *testing.T) {
 			s := &API{logger: zerolog.New(out)}
 
 			// Creates a fake server that wraps tester with our handler
-			ts := httptest.NewServer(s.wrap(tester))
+			ts := httptest.NewServer(s.Wrap(tester))
 			defer ts.Close()
 
 			// Do a dummy request
