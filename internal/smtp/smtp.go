@@ -27,8 +27,8 @@ type Client interface {
 	Close() error
 }
 
-// SMTP wraps SMTP email sending
-type SMTP struct {
+// smtpClient wraps smtpClient email sending
+type smtpClient struct {
 	addr   string
 	client goSMTP
 	logger zerolog.Logger
@@ -50,7 +50,7 @@ func New(addr string, logger zerolog.Logger) Client {
 		logger.Panic().Err(err).Msg("could not dial to smtp server")
 	}
 
-	return &SMTP{
+	return &smtpClient{
 		addr:   addr,
 		client: client,
 		logger: logger,
@@ -60,7 +60,7 @@ func New(addr string, logger zerolog.Logger) Client {
 // Send sends given messsage and returns the number accepted recipients by the server.
 // One transaction is executed for the combination of To+Cc while it will create
 // one extra transaction for reach Bcc recipient.
-func (s *SMTP) Send(ctx context.Context, msg *converter.Message) (int, error) {
+func (s *smtpClient) Send(ctx context.Context, msg *converter.Message) (int, error) {
 	if msg == nil {
 		return 0, errors.New("failed to process nil message")
 	}
@@ -107,12 +107,12 @@ func (s *SMTP) Send(ctx context.Context, msg *converter.Message) (int, error) {
 }
 
 // Close terminates the SMTP connection
-func (s *SMTP) Close() error {
+func (s *smtpClient) Close() error {
 	s.logger.Info().Msg("closing smtp server connection")
 	return s.client.Close()
 }
 
-func (s *SMTP) execTransaction(logger zerolog.Logger, from string, tos []string, raw []byte) error {
+func (s *smtpClient) execTransaction(logger zerolog.Logger, from string, tos []string, raw []byte) error {
 	logger.Debug().Str("from", from).Msg("sending MAIL FROM cmd")
 	if err := s.client.Mail(from); err != nil {
 		logger.Error().Err(err).Msg("failed to issue MAIL FROM cmd")

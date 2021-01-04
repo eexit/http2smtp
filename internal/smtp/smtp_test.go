@@ -261,7 +261,7 @@ func TestSMTP_Send(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &SMTP{
+			s := &smtpClient{
 				client: tt.smtpClient,
 				logger: zerolog.Nop(),
 			}
@@ -279,7 +279,7 @@ func TestSMTP_Send(t *testing.T) {
 
 func TestClose(t *testing.T) {
 	t.Run("SMTP close ok", func(t *testing.T) {
-		s := &SMTP{
+		s := &smtpClient{
 			client: &fakeSMTP{
 				close: func() error {
 					return nil
@@ -293,7 +293,7 @@ func TestClose(t *testing.T) {
 
 	t.Run("SMTP close error", func(t *testing.T) {
 		wantErr := errors.New("closing error")
-		s := &SMTP{
+		s := &smtpClient{
 			client: &fakeSMTP{
 				close: func() error {
 					return wantErr
