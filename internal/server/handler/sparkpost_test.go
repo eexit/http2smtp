@@ -2,7 +2,6 @@ package handler
 
 import (
 	"bytes"
-	"context"
 	"errors"
 	"io"
 	"io/ioutil"
@@ -62,9 +61,9 @@ func TestSparkPost(t *testing.T) {
 			name: "send error",
 			args: args{
 				converterProvider: converter.NewProvider(&converter.Stub{StubID: converter.SparkPostID}),
-				smtpClient: &sender{
-					sentCount: 0,
-					err:       errors.New("smtp error"),
+				smtpClient: &smtp.Stub{
+					SentCount: 0,
+					Err:       errors.New("smtp error"),
 				},
 				requestBody: bytes.NewReader([]byte{}),
 			},
@@ -75,7 +74,7 @@ func TestSparkPost(t *testing.T) {
 			name: "send ok",
 			args: args{
 				converterProvider: converter.NewProvider(&converter.Stub{StubID: converter.SparkPostID}),
-				smtpClient:        &sender{sentCount: 42},
+				smtpClient:        &smtp.Stub{SentCount: 42},
 				requestBody:       bytes.NewReader([]byte{}),
 			},
 			wantCode: http.StatusCreated,
@@ -120,17 +119,4 @@ type failingReader struct{}
 
 func (*failingReader) Read(p []byte) (n int, err error) {
 	return 0, errors.New("read error")
-}
-
-type sender struct {
-	sentCount int
-	err       error
-}
-
-func (s *sender) Send(_ context.Context, _ *converter.Message) (int, error) {
-	return s.sentCount, s.err
-}
-
-func (s *sender) Close() error {
-	return nil
 }
