@@ -1,4 +1,4 @@
-package server
+package api
 
 import (
 	"context"
@@ -28,7 +28,7 @@ func TestNew(t *testing.T) {
 		&smtp.Stub{},
 		converter.NewProvider(),
 	)
-	want := &Server{
+	want := &API{
 		env: env.Bag{
 			ServerHost: "test",
 			ServerPort: "8080",
@@ -55,16 +55,12 @@ func TestNew(t *testing.T) {
 		t.Errorf("converterProvider = %#v, want %#v", got.converterProvider, want.converterProvider)
 	}
 
-	// if got.svr.Addr != want.svr.Addr {
-	// 	t.Errorf("inner server addr = %#v, want %#v", got.svr.Addr, want.svr.Addr)
-	// }
-
 	if got.shutdownCtx != got.svr.BaseContext() {
 		t.Errorf("shutdownCtx should be equal to server base context")
 	}
 }
 
-func TestServer_Serve(t *testing.T) {
+func TestAPI_Serve(t *testing.T) {
 	type fields struct {
 		svr        goServer
 		smtpClient smtp.Client
@@ -114,7 +110,7 @@ func TestServer_Serve(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			shutdownCtx, cancelFunc := context.WithCancel(context.Background())
 
-			s := &Server{
+			a := &API{
 				svr:         tt.fields.svr,
 				env:         env.Bag{ServerShutdownTimeout: 0},
 				shutdownCtx: shutdownCtx,
@@ -124,19 +120,19 @@ func TestServer_Serve(t *testing.T) {
 				sigint:      make(chan os.Signal, 1),
 			}
 
-			signal.Notify(s.sigint, syscall.SIGUSR1)
+			signal.Notify(a.sigint, syscall.SIGUSR1)
 
 			done := make(chan bool)
 
 			go func() {
-				if err := s.Serve(); (err != nil) != tt.wantErr {
+				if err := a.Serve(); (err != nil) != tt.wantErr {
 					t.Errorf("Server.Serve() error = %v, wantErr %v", err, tt.wantErr)
 				}
 				done <- true
 			}()
 
 			if tt.sigint {
-				s.sigint <- syscall.SIGUSR1
+				a.sigint <- syscall.SIGUSR1
 			}
 
 			<-done

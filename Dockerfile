@@ -7,7 +7,7 @@ WORKDIR /go/src/github.com/eexit/http2smtp
 COPY . .
 # Inject the build version: https://blog.alexellis.io/inject-build-time-vars-golang/
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
-    -ldflags "-X github.com/eexit/http2smtp/internal/server.Version=${version}" \
+    -ldflags "-X github.com/eexit/http2smtp/internal/api.Version=${version}" \
     -o /http2smtp \
     ./cmd/http2smtp
 

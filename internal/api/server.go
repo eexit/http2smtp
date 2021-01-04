@@ -1,4 +1,4 @@
-package server
+package api
 
 import (
 	"context"
@@ -36,8 +36,8 @@ func (sw *serverWrapper) BaseContext() context.Context {
 	return sw.Server.BaseContext(nil)
 }
 
-// Server is the app entry point: it contains the HTTP server, config and services
-type Server struct {
+// API is the app entry point: it contains the HTTP server, config and services
+type API struct {
 	svr               goServer
 	logger            zerolog.Logger
 	shutdownCtx       context.Context
@@ -54,7 +54,7 @@ func New(
 	logger zerolog.Logger,
 	smtpClient smtp.Client,
 	converterProvider converter.Provider,
-) *Server {
+) *API {
 	// This context will be used as a base context for all incoming
 	// request. It is cancellable so when the server is shutting down,
 	// we can propagate the cancellation signal to handlers and services
@@ -62,7 +62,7 @@ func New(
 
 	logger.Info().Msg("app is starting")
 
-	svr := &Server{
+	svr := &API{
 		env:               e,
 		cancelFunc:        cancel,
 		logger:            logger,
@@ -92,14 +92,14 @@ func New(
 
 // Serve listens and serves for incoming HTTP request. It also handles
 // graceful shutdown logic
-func (s *Server) Serve() error {
+func (a *API) Serve() error {
 	errch := make(chan error)
 
 	go func(errch chan error) {
-		s.logger.Info().Msgf("listening on %s:%s", s.env.ServerHost, s.env.ServerPort)
-		if err := s.svr.ListenAndServe(); err != http.ErrServerClosed {
+		a.logger.Info().Msgf("listening on %s:%s", a.env.ServerHost, a.env.ServerPort)
+		if err := a.svr.ListenAndServe(); err != http.ErrServerClosed {
 			// Error starting the listener:
-			s.logger.Err(err).Msgf("server listening error: %s", err)
+			a.logger.Err(err).Msgf("server listening error: %s", err)
 			errch <- err
 			return
 		}
@@ -112,24 +112,24 @@ func (s *Server) Serve() error {
 		case err := <-errch:
 			return err
 		// This catches a OS signal (SIGINT)
-		case <-s.sigint:
-			s.logger.Info().Msg("closing server")
+		case <-a.sigint:
+			a.logger.Info().Msg("closing server")
 
-			s.cancelFunc()
-			(s.smtpClient.Close()) // closes SMTP connection
+			a.cancelFunc()
+			(a.smtpClient.Close()) // closes SMTP connection
 
 			// server shutdown context
-			shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), time.Duration(s.env.ServerShutdownTimeout)*time.Second)
+			shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), time.Duration(a.env.ServerShutdownTimeout)*time.Second)
 			defer shutdownCancel()
 
 			// We received an interrupt signal, shut down
-			if err := s.svr.Shutdown(shutdownCtx); err != nil {
+			if err := a.svr.Shutdown(shutdownCtx); err != nil {
 				// Error shutting down
 				err = fmt.Errorf("server close error: %w", err)
-				s.logger.Error().Msg(err.Error())
+				a.logger.Error().Msg(err.Error())
 				return err
 			}
-			s.logger.Info().Msg("server closed")
+			a.logger.Info().Msg("server closed")
 			return nil
 		}
 	}

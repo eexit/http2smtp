@@ -5,9 +5,9 @@ import (
 	"os"
 	"time"
 
+	"github.com/eexit/http2smtp/internal/api"
 	"github.com/eexit/http2smtp/internal/converter"
 	"github.com/eexit/http2smtp/internal/env"
-	"github.com/eexit/http2smtp/internal/server"
 	"github.com/eexit/http2smtp/internal/smtp"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog"
@@ -28,7 +28,7 @@ func main() {
 		Level(level).
 		With().
 		Timestamp().
-		Str("version", server.Version).
+		Str("version", api.Version).
 		Logger()
 
 	smtpClient := smtp.New(e.SMTPAddr, logger)
@@ -38,8 +38,8 @@ func main() {
 		converter.NewSparkPost(),
 	)
 
-	server := server.New(e, logger, smtpClient, converterProvider)
-	if err := server.Serve(); err != nil {
+	app := api.New(e, logger, smtpClient, converterProvider)
+	if err := app.Serve(); err != nil {
 		panic(err)
 	}
 	os.Exit(0)

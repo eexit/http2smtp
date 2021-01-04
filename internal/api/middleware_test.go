@@ -1,4 +1,4 @@
-package server
+package api
 
 import (
 	"bytes"
@@ -52,7 +52,7 @@ func Test_wrap(t *testing.T) {
 			}
 
 			out := &bytes.Buffer{}
-			s := &Server{logger: zerolog.New(out)}
+			s := &API{logger: zerolog.New(out)}
 
 			// Creates a fake server that wraps tester with our handler
 			ts := httptest.NewServer(s.wrap(tester))

@@ -1,4 +1,4 @@
-package server
+package api
 
 import (
 	"net/http"
@@ -10,11 +10,11 @@ import (
 	"github.com/rs/zerolog/hlog"
 )
 
-func (s *Server) wrap(fn http.Handler) http.Handler {
+func (a *API) wrap(fn http.Handler) http.Handler {
 	return alice.New().
 		Append(
-			hlog.NewHandler(s.logger),
-			traceIDHeaderHandler(s.env.HTTPTraceHeader),
+			hlog.NewHandler(a.logger),
+			traceIDHeaderHandler(a.env.HTTPTraceHeader),
 			hlog.MethodHandler("verb"),
 			hlog.RemoteAddrHandler("ip"),
 			hlog.UserAgentHandler("user_agent"),

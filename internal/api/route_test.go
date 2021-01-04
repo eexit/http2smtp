@@ -1,4 +1,4 @@
-package server
+package api
 
 import (
 	"net/http"
@@ -44,7 +44,7 @@ func TestServer_routeHandler(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Server{
+			s := &API{
 				smtpClient:        &smtp.Stub{},
 				converterProvider: converter.NewProvider(&converter.Stub{StubID: converter.SparkPostID}),
 			}
