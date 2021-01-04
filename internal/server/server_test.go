@@ -66,9 +66,8 @@ func TestNew(t *testing.T) {
 
 func TestServer_Serve(t *testing.T) {
 	type fields struct {
-		svr            goServer
-		shutdownTimout int
-		smtpClient     smtp.Client
+		svr        goServer
+		smtpClient smtp.Client
 	}
 	tests := []struct {
 		name    string

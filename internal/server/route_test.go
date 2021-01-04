@@ -11,10 +11,6 @@ import (
 )
 
 func TestServer_routeHandler(t *testing.T) {
-	type fields struct {
-		smtpClient        smtp.Client
-		converterProvider converter.Provider
-	}
 	tests := []struct {
 		name      string
 		method    string
