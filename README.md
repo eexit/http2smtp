@@ -2,9 +2,9 @@
 
 [![version](https://img.shields.io/github/v/tag/eexit/http2smtp?label=version&logo=github&sort=semver)](https://github.com/eexit/http2smtp/releases) [![docker pull](https://img.shields.io/docker/pulls/eexit/http2smtp)](https://hub.docker.com/repository/docker/eexit/http2smtp) [![ci](https://github.com/eexit/http2smtp/workflows/build/badge.svg)](https://github.com/eexit/http2smtp/actions) [![codecov](https://codecov.io/gh/eexit/http2smtp/branch/master/graph/badge.svg?token=XH18EYLDLZ)](https://codecov.io/gh/eexit/http2smtp) [![license](https://img.shields.io/github/license/eexit/http2smtp)](https://github.com/eexit/http2smtp/blob/master/LICENSE)
 
-An API proxies HTTP-backed vendor mailer calls to SMTP.
+An API that forwards HTTP-backed vendor mailer calls to SMTP.
 
-Plug a MailHog or MailCatcher to API email sending vendors such as SparkPost, MailGun or Twilio SendGrid for testing purposes.
+Plug a [MailHog](https://github.com/mailhog/MailHog) or [MailCatcher](https://mailcatcher.me/) to API email sending vendors such as [SparkPost](https://www.sparkpost.com/), [Mailgun](https://www.mailgun.com/) or [SendGrid](https://sendgrid.com/) for testing purposes.
 
 ## Usage
 
@@ -16,7 +16,7 @@ See [examples](examples).
 
 1. Checkout this repo or only copy the `.env.dist` and `docker-compose.yml` files
 1. Rename `.env.dist` into `.env`
-1. Update the values accordingly
+1. Optional: update the values accordingly
 1. Pull images and run `docker-compose up http2smtp`
 
 ## Vendor endpoints
