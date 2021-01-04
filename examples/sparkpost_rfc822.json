@@ -1,0 +1,10 @@
+{
+    "recipients":[
+        {
+            "address":{"email":"bob@example.com"}
+        }
+    ],
+    "content":{
+        "email_rfc822":"From: Test <test@example.com>\nTo: Bob <bob@example.com>\nSubject: Hello world!\n\nHello world!"
+    }
+}
