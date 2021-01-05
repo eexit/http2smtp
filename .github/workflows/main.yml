@@ -9,12 +9,11 @@ jobs:
     name: Unit tests + coverage
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v2
     - name: Set up Go 1.x
       uses: actions/setup-go@v2
       with:
         go-version: ^1.15
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v2
     - name: Get dependencies
       run: go get -v -t -d ./...
     - name: Build
@@ -34,19 +33,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: golangci-lint
+      - name: Lint the codebase
         uses: golangci/golangci-lint-action@v2
         with:
           version: v1.34
   publish:
-    if: contains(github.ref, 'refs/tags/')
     name: Docker publish
-    runs-on: ubuntu-latest
+    if: contains(github.ref, 'refs/tags/')
     needs: [ tests, lint ]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+      - uses: docker/setup-qemu-action@v1
+      - uses: docker/setup-buildx-action@v1
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:
@@ -58,6 +57,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v2
         with:
+          platforms: linux/amd64
           build-args: version=${{ steps.tagref.outputs.tag }}+${{ github.sha }}
           tags: '${{ github.repository }}:${{ steps.tagref.outputs.tag }},${{ github.repository }}:latest'
           push: true
@@ -67,3 +67,29 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
           repository: ${{ github.repository }}
+  release-bin:
+    name: Release binaries
+    if: contains(github.ref, 'refs/tags/')
+    needs: [ tests, lint ]
+    runs-on: ubuntu-latest
+    env:
+      CGO_ENABLED: 0
+    strategy:
+      matrix:
+        target: [http2smtp, http2smtp-lambda]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Retrieve tag
+        id: tagref
+        run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
+      - uses: wangyoucao577/go-release-action@v1.11
+        with:
+          github_token: ${{ secrets.GH_TOKEN }}
+          goos: linux
+          goarch: amd64
+          goversion: '1.15'
+          project_path: "cmd/${{ matrix.target }}"
+          binary_name: ${{ matrix.target }}
+          extra_files: LICENSE README.md
+          release_tag: ${{ steps.tagref.outputs.tag }}
+          ldflags: -X "github.com/eexit/http2smtp/internal/api.Version=${{ steps.tagref.outputs.tag }}+${{ github.sha }}"

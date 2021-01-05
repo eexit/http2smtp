@@ -1,17 +1,16 @@
-FROM golang:1-alpine AS builder
-RUN apk --update add ca-certificates
+FROM golang:1 AS builder
 RUN update-ca-certificates
 ARG version
-ARG target=http2smtp
 ARG goos=linux
+ARG goarch=amd64
 LABEL version=${version}
 WORKDIR /go/src/github.com/eexit/http2smtp
 COPY . .
 # Inject the build version: https://blog.alexellis.io/inject-build-time-vars-golang/
-RUN CGO_ENABLED=0 GOOS=${goos} GOARCH=amd64 go build \
+RUN CGO_ENABLED=0 GOOS=${goos} GOARCH=${goarch} go build \
     -ldflags "-X github.com/eexit/http2smtp/internal/api.Version=${version}" \
     -o /http2smtp \
-    ./cmd/${target}
+    ./cmd/http2smtp
 
 FROM scratch
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
