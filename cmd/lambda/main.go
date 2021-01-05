@@ -1,10 +1,14 @@
 package main
 
 import (
+	"context"
 	"math/rand"
 	"os"
 	"time"
 
+	"github.com/aws/aws-lambda-go/events"
+	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/awslabs/aws-lambda-go-api-proxy/httpadapter"
 	"github.com/eexit/http2smtp/internal/api"
 	"github.com/eexit/http2smtp/internal/converter"
 	"github.com/eexit/http2smtp/internal/env"
@@ -13,7 +17,9 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func main() {
+var adapter *httpadapter.HandlerAdapter
+
+func init() {
 	rand.Seed(time.Now().UTC().UnixNano())
 
 	var e env.Bag
@@ -39,8 +45,14 @@ func main() {
 	)
 
 	app := api.New(e, logger, smtpClient, converterProvider)
-	if err := app.Serve(); err != nil {
-		panic(err)
-	}
-	os.Exit(0)
+	adapter = httpadapter.New(app.Wrap(app.Mux()))
+}
+
+// Handler handles the function invocation
+func Handler(ctx context.Context, req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	return adapter.ProxyWithContext(ctx, req)
+}
+
+func main() {
+	lambda.Start(Handler)
 }
