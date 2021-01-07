@@ -1,6 +1,6 @@
 # :zap: http2smtp for AWS Lambda
 
-Deploy in 2 commands!
+Deploy in 3 commands (assuming you already have a SMTP server deployed).
 
 ## Usage
 
