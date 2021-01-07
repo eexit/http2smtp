@@ -1,0 +1,25 @@
+service: http2smtp-lambda
+frameworkVersion: '2'
+useDotenv: true
+
+provider:
+  name: aws
+  runtime: go1.x
+
+package:
+  exclude:
+    - ./**
+  include:
+    - http2smtp-lambda
+
+functions:
+  proxy:
+    handler: http2smtp-lambda
+    memorySize: 128
+    environment:
+      SMTP_ADDR: 'smtp:25'
+      LOG_LEVEL: debug
+    events:
+      - http:
+          path: '{proxy+}'
+          method: any

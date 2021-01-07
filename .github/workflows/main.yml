@@ -88,8 +88,8 @@ jobs:
           goos: linux
           goarch: amd64
           goversion: '1.15'
-          project_path: "cmd/${{ matrix.target }}"
+          project_path: cmd/${{ matrix.target }}
           binary_name: ${{ matrix.target }}
           extra_files: LICENSE README.md
           release_tag: ${{ steps.tagref.outputs.tag }}
-          ldflags: -X "github.com/eexit/http2smtp/internal/api.Version=${{ steps.tagref.outputs.tag }}+${{ github.sha }}"
+          ldflags: -X github.com/eexit/http2smtp/internal/api.Version=${{ steps.tagref.outputs.tag }}+${{ github.sha }}
