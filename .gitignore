@@ -1,2 +1,4 @@
 .env
 coverage.txt
+http2smtp
+.serverless
