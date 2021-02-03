@@ -1,7 +1,6 @@
 package converter
 
 import (
-	"errors"
 	"io"
 	"reflect"
 	"strings"
@@ -252,10 +251,4 @@ func TestMessage_HasRecipients(t *testing.T) {
 			}
 		})
 	}
-}
-
-type failingReader struct{}
-
-func (*failingReader) Read(p []byte) (n int, err error) {
-	return 0, errors.New("read error")
 }

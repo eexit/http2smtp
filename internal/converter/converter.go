@@ -99,7 +99,8 @@ func readBody(r *http.Request) (io.ReadSeeker, error) {
 	if err != nil {
 		return nil, err
 	}
-	r.Body.Close()
+	defer r.Body.Close()
+
 	r.Body = ioutil.NopCloser(bytes.NewBuffer(body))
 	return bytes.NewReader(body), nil
 }

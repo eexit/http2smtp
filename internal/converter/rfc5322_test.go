@@ -22,7 +22,7 @@ func Test_NewRFC5322(t *testing.T) {
 func Test_rfc5322_Convert(t *testing.T) {
 	tests := []struct {
 		name    string
-		reqBody io.ReadSeeker
+		reqBody io.Reader
 		want    *Message
 		wantErr bool
 	}{
@@ -60,6 +60,12 @@ func Test_rfc5322_Convert(t *testing.T) {
 		{
 			name:    "message parsing error",
 			reqBody: strings.NewReader(" From: Test <test@example.com>"),
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name:    "body read error",
+			reqBody: &failingReader{},
 			want:    nil,
 			wantErr: true,
 		},

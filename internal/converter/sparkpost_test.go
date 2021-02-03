@@ -36,10 +36,16 @@ func Test_spt10n_ID(t *testing.T) {
 func Test_spt10n_Convert(t *testing.T) {
 	tests := []struct {
 		name    string
-		reqBody io.ReadSeeker
+		reqBody io.Reader
 		wantNil bool
 		wantErr bool
 	}{
+		{
+			name:    "body read error",
+			reqBody: &failingReader{},
+			wantNil: true,
+			wantErr: true,
+		},
 		{
 			name:    "data is not valid json",
 			reqBody: strings.NewReader("<html></html>"),
