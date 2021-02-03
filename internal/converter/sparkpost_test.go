@@ -3,7 +3,8 @@ package converter
 import (
 	"errors"
 	"io"
-	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"sort"
 	"strings"
@@ -35,31 +36,37 @@ func Test_spt10n_ID(t *testing.T) {
 func Test_spt10n_Convert(t *testing.T) {
 	tests := []struct {
 		name    string
-		data    io.ReadSeeker
+		reqBody io.Reader
 		wantNil bool
 		wantErr bool
 	}{
 		{
+			name:    "body read error",
+			reqBody: &failingReader{},
+			wantNil: true,
+			wantErr: true,
+		},
+		{
 			name:    "data is not valid json",
-			data:    strings.NewReader("<html></html>"),
+			reqBody: strings.NewReader("<html></html>"),
 			wantNil: true,
 			wantErr: true,
 		},
 		{
 			name:    "json payload is not valid",
-			data:    strings.NewReader(`{"foo":"bar"}`),
+			reqBody: strings.NewReader(`{"foo":"bar"}`),
 			wantNil: true,
 			wantErr: true,
 		},
 		{
 			name:    "inline transmission is not supported",
-			data:    strings.NewReader(`{"recipients":[{"address":{"email":"foo@example.com"}}],"content":{"email_rfc822":""}}`),
+			reqBody: strings.NewReader(`{"recipients":[{"address":{"email":"foo@example.com"}}],"content":{"email_rfc822":""}}`),
 			wantNil: true,
 			wantErr: true,
 		},
 		{
 			name:    "RFC822 transmission is processed",
-			data:    strings.NewReader(`{"recipients":[{"address":{"email":"foo@example.com"}}],"content":{"email_rfc822":"From: Test <test@example.com>\nTo: Bob <bob@example.com>\nSubject: Hello world!\n\nHello world!"}}`),
+			reqBody: strings.NewReader(`{"recipients":[{"address":{"email":"foo@example.com"}}],"content":{"email_rfc822":"From: Test <test@example.com>\nTo: Bob <bob@example.com>\nSubject: Hello world!\n\nHello world!"}}`),
 			wantNil: false,
 			wantErr: false,
 		},
@@ -67,7 +74,7 @@ func Test_spt10n_Convert(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := NewSparkPost()
-			got, err := s.Convert(tt.data)
+			got, err := s.Convert(httptest.NewRequest(http.MethodPost, "/", tt.reqBody))
 			if (err != nil) != tt.wantErr {
 				t.Errorf("spt10n.Convert() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -102,7 +109,7 @@ func Test_spt10n_rfc822ToMessage(t *testing.T) {
 					},
 				},
 				Content: Content{
-					EmailRFC822: toString(simpleMessage),
+					EmailRFC822: simpleMessage,
 				},
 			},
 			rfc5322Converter: &Stub{
@@ -113,7 +120,7 @@ func Test_spt10n_rfc822ToMessage(t *testing.T) {
 				[]string{"recipient@example.com"},
 				nil,
 				nil,
-				simpleMessage,
+				strings.NewReader(simpleMessage),
 			),
 			wantErr: false,
 		},
@@ -132,7 +139,7 @@ func Test_spt10n_rfc822ToMessage(t *testing.T) {
 					},
 				},
 				Content: Content{
-					EmailRFC822: toString(messageWithCc),
+					EmailRFC822: messageWithCc,
 				},
 			},
 			rfc5322Converter: &Stub{
@@ -143,7 +150,7 @@ func Test_spt10n_rfc822ToMessage(t *testing.T) {
 				[]string{"recipient1@example.com", "recipient2@example.com", "recipient3@example.com"},
 				nil,
 				nil,
-				messageWithCc,
+				strings.NewReader(messageWithCc),
 			),
 			wantErr: false,
 		},
@@ -198,14 +205,8 @@ func Test_spt10n_rfc822ToMessage(t *testing.T) {
 			wantRawString := string(wantRaw)
 
 			if gotRawString != wantRawString {
-				t.Errorf("Raw() = %#v, want %#v", gotRawString, wantRawString)
+				t.Errorf("spt10n.rfc822ToMessage.Raw() = %#v, want %#v", gotRawString, wantRawString)
 			}
 		})
 	}
-}
-
-func toString(i io.ReadSeeker) string {
-	s, _ := ioutil.ReadAll(i)
-	(i.Seek(0, 0)) // rewind because the same content will be read another time
-	return string(s)
 }

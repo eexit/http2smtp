@@ -1,6 +1,6 @@
 package converter
 
-import "io"
+import "net/http"
 
 // StubConverterID is the Stub converter ID
 const StubConverterID ID = "stub"
@@ -23,6 +23,6 @@ func (s *Stub) ID() ID {
 
 // Convert implements the Converter interface. It returns the stub
 // message and error.
-func (s *Stub) Convert(data io.ReadSeeker) (*Message, error) {
+func (s *Stub) Convert(r *http.Request) (*Message, error) {
 	return s.Message, s.Err
 }

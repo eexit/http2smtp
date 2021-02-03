@@ -2,7 +2,7 @@ package converter
 
 import (
 	"fmt"
-	"io"
+	"net/http"
 	"net/mail"
 	"strings"
 )
@@ -21,21 +21,25 @@ func (rfc *rfc5322) ID() ID {
 	return RFC5322ID
 }
 
-func (rfc *rfc5322) Convert(data io.ReadSeeker) (*Message, error) {
-	m, err := mail.ReadMessage(data)
+func (rfc *rfc5322) Convert(r *http.Request) (*Message, error) {
+	body, err := slurpBody(r)
+	if err != nil {
+		return nil, err
+	}
+
+	m, err := mail.ReadMessage(body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse input: %w", err)
 	}
 
-	// Resets the reader
-	(data.Seek(0, 0))
+	(body.Seek(0, 0))
 
 	return NewMessage(
 		m.Header.Get("From"),
 		parse(m.Header, "To"),
 		parse(m.Header, "Cc"),
 		parse(m.Header, "Bcc"),
-		data,
+		body,
 	), nil
 }
 

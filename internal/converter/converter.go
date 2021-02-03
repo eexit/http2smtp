@@ -1,11 +1,18 @@
 package converter
 
 import (
+	"bytes"
 	"fmt"
 	"io"
+	"io/ioutil"
+	"net/http"
 	"sort"
 	"sync"
+
+	validator "github.com/go-playground/validator/v10"
 )
+
+var val = validator.New()
 
 type (
 	// ID is a converter ID type
@@ -31,7 +38,7 @@ func (i ids) Less(a, b int) bool {
 // Converter converts an input to a ConvertedMessage
 type Converter interface {
 	ID() ID
-	Convert(data io.ReadSeeker) (*Message, error)
+	Convert(r *http.Request) (*Message, error)
 }
 
 // Provider exposes the provider methods
@@ -84,4 +91,16 @@ func (p *provider) Get(cid ID) (Converter, error) {
 		}
 	}
 	return nil, fmt.Errorf("converter ID %v not found", cid)
+}
+
+// slurpBody idempotently copies a request's body
+func slurpBody(r *http.Request) (io.ReadSeeker, error) {
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return nil, err
+	}
+	defer r.Body.Close()
+
+	r.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+	return bytes.NewReader(body), nil
 }
