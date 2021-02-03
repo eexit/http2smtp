@@ -93,8 +93,8 @@ func (p *provider) Get(cid ID) (Converter, error) {
 	return nil, fmt.Errorf("converter ID %v not found", cid)
 }
 
-// readBody dumps a request body without altering the given request body
-func readBody(r *http.Request) (io.ReadSeeker, error) {
+// slurpBody idempotently copies a request's body
+func slurpBody(r *http.Request) (io.ReadSeeker, error) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return nil, err

@@ -160,7 +160,7 @@ func Test_provider_Get(t *testing.T) {
 	}
 }
 
-func Test_readBody(t *testing.T) {
+func Test_slurpBody(t *testing.T) {
 	tests := []struct {
 		name    string
 		req     *http.Request
@@ -188,9 +188,9 @@ func Test_readBody(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := readBody(tt.req)
+			got, err := slurpBody(tt.req)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("readBody() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("slurpBody() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 
@@ -206,9 +206,10 @@ func Test_readBody(t *testing.T) {
 			gotAsStr := string(gotAsBytes)
 
 			if gotAsStr != tt.want {
-				t.Errorf("readBody() = %#v, want %#v", gotAsStr, tt.want)
+				t.Errorf("slurpBody() = %#v, want %#v", gotAsStr, tt.want)
 			}
 
+			// Ensures the request body is still there after the slurp
 			body, err := ioutil.ReadAll(tt.req.Body)
 			if err != nil {
 				t.Fatalf("request body read failed: %v", err)

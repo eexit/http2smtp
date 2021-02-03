@@ -22,7 +22,7 @@ func (rfc *rfc5322) ID() ID {
 }
 
 func (rfc *rfc5322) Convert(r *http.Request) (*Message, error) {
-	body, err := readBody(r)
+	body, err := slurpBody(r)
 	if err != nil {
 		return nil, err
 	}
