@@ -1,9 +1,7 @@
 package handler
 
 import (
-	"bytes"
 	"encoding/json"
-	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"strconv"
@@ -12,7 +10,7 @@ import (
 	"github.com/eexit/http2smtp/internal/smtp"
 )
 
-const idLenght = 10000000000000000
+const spIDLenght = 10000000000000000
 
 type results struct {
 	ID                      string `json:"id"`
@@ -23,14 +21,6 @@ type results struct {
 // SparkPost handles SparkPost transmission API calls
 func SparkPost(smtpClient smtp.Client, converterProvider converter.Provider) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		body, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			(json.NewEncoder(w).Encode(map[string]string{"error": err.Error()}))
-			return
-		}
-		defer r.Body.Close()
-
 		converter, err := converterProvider.Get(converter.SparkPostID)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -38,7 +28,7 @@ func SparkPost(smtpClient smtp.Client, converterProvider converter.Provider) htt
 			return
 		}
 
-		message, err := converter.Convert(bytes.NewReader(body))
+		message, err := converter.Convert(r)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			(json.NewEncoder(w).Encode(map[string]string{"error": err.Error()}))
@@ -58,7 +48,7 @@ func SparkPost(smtpClient smtp.Client, converterProvider converter.Provider) htt
 		}{
 			Results: results{
 				TotalAcceptedRecipients: sentCount,
-				ID:                      strconv.Itoa(rand.Intn(idLenght)),
+				ID:                      strconv.Itoa(rand.Intn(spIDLenght)),
 			},
 		}))
 	}

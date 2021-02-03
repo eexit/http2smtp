@@ -28,15 +28,6 @@ func TestSparkPost(t *testing.T) {
 		wantBody string
 	}{
 		{
-			name: "request body failed to read",
-			args: args{
-				converterProvider: converter.NewProvider(),
-				requestBody:       &failingReader{},
-			},
-			wantCode: http.StatusInternalServerError,
-			wantBody: `{"error":"read error"}`,
-		},
-		{
 			name: "no converter for this route",
 			args: args{
 				converterProvider: converter.NewProvider(),
@@ -113,10 +104,4 @@ func TestSparkPost(t *testing.T) {
 			}
 		})
 	}
-}
-
-type failingReader struct{}
-
-func (*failingReader) Read(p []byte) (n int, err error) {
-	return 0, errors.New("read error")
 }

@@ -1,9 +1,12 @@
 package converter
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
-	"io"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 
 	validator "github.com/go-playground/validator/v10"
@@ -34,8 +37,6 @@ type Content struct {
 	EmailRFC822 string `json:"email_rfc822"`
 }
 
-var val = validator.New()
-
 type spt10n struct {
 	rfc5322Converter Converter
 	validator        *validator.Validate
@@ -53,10 +54,15 @@ func (s *spt10n) ID() ID {
 	return SparkPostID
 }
 
-func (s *spt10n) Convert(data io.ReadSeeker) (*Message, error) {
-	t10n := &SparkPostTransmission{}
+func (s *spt10n) Convert(r *http.Request) (*Message, error) {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return nil, err
+	}
+	defer r.Body.Close()
 
-	if err := json.NewDecoder(data).Decode(t10n); err != nil {
+	t10n := &SparkPostTransmission{}
+	if err := json.NewDecoder(bytes.NewReader(data)).Decode(t10n); err != nil {
 		return nil, err
 	}
 
@@ -72,10 +78,10 @@ func (s *spt10n) Convert(data io.ReadSeeker) (*Message, error) {
 }
 
 func (s *spt10n) rfc822ToMessage(t10n *SparkPostTransmission) (*Message, error) {
-	raw := strings.NewReader(t10n.Content.EmailRFC822)
+	body := strings.NewReader(t10n.Content.EmailRFC822)
 
 	// First, we need to parse the raw email to get the from address
-	messageFromRFC822, err := s.rfc5322Converter.Convert(raw)
+	messageFromRFC822, err := s.rfc5322Converter.Convert(httptest.NewRequest(http.MethodPost, "/", body))
 	if err != nil {
 		return nil, err
 	}
@@ -92,6 +98,6 @@ func (s *spt10n) rfc822ToMessage(t10n *SparkPostTransmission) (*Message, error) 
 		rcpts,
 		nil,
 		nil,
-		raw,
+		body,
 	), nil
 }
