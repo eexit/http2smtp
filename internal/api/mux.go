@@ -17,5 +17,8 @@ func (a *API) Mux() http.Handler {
 	r.Handle("/sparkpost/api/v1/transmissions", handler.SparkPost(a.smtpClient, a.converterProvider)).
 		Methods(http.MethodPost)
 
+	r.Handle("/mailgun/api/v3/messages.mime", handler.Mailgun(a.smtpClient, a.converterProvider)).
+		Methods(http.MethodPost)
+
 	return r
 }

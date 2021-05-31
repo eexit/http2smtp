@@ -36,6 +36,7 @@ func main() {
 	converterProvider := converter.NewProvider(
 		converter.NewRFC5322(),
 		converter.NewSparkPost(),
+		converter.NewMailgun(),
 	)
 
 	app := api.New(e, logger, smtpClient, converterProvider)

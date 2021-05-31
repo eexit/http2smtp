@@ -1,18 +1,19 @@
 package converter
 
 import (
-	"bytes"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"net/http"
 	"sort"
 	"sync"
 
+	form "github.com/go-playground/form/v4"
 	validator "github.com/go-playground/validator/v10"
 )
 
-var val = validator.New()
+var (
+	val     = validator.New()
+	decoder = form.NewDecoder()
+)
 
 type (
 	// ID is a converter ID type
@@ -91,16 +92,4 @@ func (p *provider) Get(cid ID) (Converter, error) {
 		}
 	}
 	return nil, fmt.Errorf("converter ID %v not found", cid)
-}
-
-// slurpBody idempotently copies a request's body
-func slurpBody(r *http.Request) (io.ReadSeeker, error) {
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return nil, err
-	}
-	defer r.Body.Close()
-
-	r.Body = ioutil.NopCloser(bytes.NewBuffer(body))
-	return bytes.NewReader(body), nil
 }

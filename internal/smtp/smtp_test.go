@@ -12,6 +12,7 @@ import (
 
 	"github.com/eexit/http2smtp/internal/converter"
 	"github.com/eexit/http2smtp/internal/ctx"
+	"github.com/eexit/http2smtp/pkg/testutil"
 	"github.com/rs/zerolog"
 )
 
@@ -101,7 +102,7 @@ func TestSMTP_Send(t *testing.T) {
 			smtpClient: &fakeSMTP{},
 			args: args{
 				ctx: context.Background(),
-				msg: converter.NewMessage("", nil, nil, nil, &failingReader{}),
+				msg: converter.NewMessage("", nil, nil, nil, &testutil.FailingReader{}),
 			},
 			accepted: 0,
 			wantErr:  true,
@@ -178,7 +179,7 @@ func TestSMTP_Send(t *testing.T) {
 				mail: strCmdOK,
 				rcpt: strCmdOK,
 				data: func() (io.WriteCloser, error) {
-					return &fakeWriteCloser{err: errors.New("failed to write")}, nil
+					return &testutil.StubWriteCloser{WriteErr: errors.New("failed to write")}, nil
 				},
 			},
 			args: args{
@@ -389,7 +390,7 @@ func (s smtpSender) send(f string) {
 var (
 	strCmdOK = func(s string) error { return nil }
 	strCmdKO = func(s string) error { return errors.New("cmd failed") }
-	dataOK   = func() (io.WriteCloser, error) { return &fakeWriteCloser{}, nil }
+	dataOK   = func() (io.WriteCloser, error) { return &testutil.StubWriteCloser{}, nil }
 )
 
 type fakeSMTP struct {
@@ -425,22 +426,4 @@ func (f *fakeSMTP) Close() error {
 		panic("not implemented")
 	}
 	return f.close()
-}
-
-type failingReader struct{}
-
-func (*failingReader) Read(p []byte) (n int, err error) {
-	return 0, errors.New("read error")
-}
-
-type fakeWriteCloser struct {
-	err error
-}
-
-func (f *fakeWriteCloser) Write(p []byte) (int, error) {
-	return len(p), f.err
-}
-
-func (*fakeWriteCloser) Close() error {
-	return nil
 }

@@ -7,6 +7,8 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/eexit/http2smtp/pkg/testutil"
 )
 
 func Test_NewRFC5322(t *testing.T) {
@@ -65,7 +67,7 @@ func Test_rfc5322_Convert(t *testing.T) {
 		},
 		{
 			name:    "body read error",
-			reqBody: &failingReader{},
+			reqBody: &testutil.FailingReader{},
 			want:    nil,
 			wantErr: true,
 		},

@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"net/mail"
 	"strings"
+
+	"github.com/eexit/http2smtp/pkg"
 )
 
 // RFC5322ID is the ID for RFC5322 converter
@@ -22,7 +24,7 @@ func (rfc *rfc5322) ID() ID {
 }
 
 func (rfc *rfc5322) Convert(r *http.Request) (*Message, error) {
-	body, err := slurpBody(r)
+	body, err := pkg.SlurpBody(r)
 	if err != nil {
 		return nil, err
 	}

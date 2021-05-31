@@ -38,6 +38,12 @@ SparkPost supports either [inline](https://developers.sparkpost.com/api/transmis
 
 Basic validation is enforced, only the recipients list email and the RFC 822 content are used and mandatory.
 
+### [Mailgun](https://documentation.mailgun.com/en/latest)
+
+    POST /mailgun/api/v3/messages.mime
+
+
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

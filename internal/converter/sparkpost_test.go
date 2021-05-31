@@ -9,6 +9,8 @@ import (
 	"sort"
 	"strings"
 	"testing"
+
+	"github.com/eexit/http2smtp/pkg/testutil"
 )
 
 func TestNewSparkPost(t *testing.T) {
@@ -42,7 +44,7 @@ func Test_spt10n_Convert(t *testing.T) {
 	}{
 		{
 			name:    "body read error",
-			reqBody: &failingReader{},
+			reqBody: &testutil.FailingReader{},
 			wantNil: true,
 			wantErr: true,
 		},

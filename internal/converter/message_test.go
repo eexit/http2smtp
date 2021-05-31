@@ -5,6 +5,8 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/eexit/http2smtp/pkg/testutil"
 )
 
 func TestNewMessage(t *testing.T) {
@@ -178,7 +180,7 @@ func TestMessage_Raw(t *testing.T) {
 		},
 		{
 			name:    "read error",
-			raw:     &failingReader{},
+			raw:     &testutil.FailingReader{},
 			want:    []byte{},
 			wantErr: true,
 		},
