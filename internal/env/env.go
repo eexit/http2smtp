@@ -2,10 +2,6 @@ package env
 
 // Bag holds all the config envvars
 type Bag struct {
-	// ServerHost is the app hostname to listen for incoming HTTP requests from
-	ServerHost string `envconfig:"SERVER_HOST"`
-	// ServerPort is the app listening port
-	ServerPort string `envconfig:"SERVER_PORT" default:"8080"`
 	// ServerShutdownTimeout is a duration in seconds to graceful shutdown internal
 	// processes when the app has initiated a shutdown.
 	ServerShutdownTimeout int `envconfig:"SERVER_SHUTDOWN_TIMEOUT" default:"5"`
