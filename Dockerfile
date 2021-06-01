@@ -1,6 +1,6 @@
 FROM eexit/curl-healthchecker:v1.0.0 AS curl
 
-FROM golang:1 AS builder
+FROM golang:1.16 AS builder
 RUN apt-get update -y \
     && apt-get install -y upx \
     && update-ca-certificates
