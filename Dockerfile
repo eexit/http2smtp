@@ -1,7 +1,9 @@
 FROM eexit/curl-healthchecker:v1.0.0 AS curl
 
 FROM golang:1 AS builder
-RUN update-ca-certificates
+RUN apt-get update -y \
+    && apt-get install -y upx \
+    && update-ca-certificates
 ARG version
 ARG goos=linux
 ARG goarch=amd64
@@ -13,6 +15,7 @@ RUN CGO_ENABLED=0 GOOS=${goos} GOARCH=${goarch} go build \
     -ldflags "-X github.com/eexit/http2smtp/internal/api.Version=${version}" \
     -o /http2smtp \
     ./cmd/http2smtp
+RUN upx /http2smtp
 
 FROM scratch
 COPY --from=curl /curl /
