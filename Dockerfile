@@ -1,3 +1,5 @@
+FROM eexit/curl-healthchecker:v1.0.0 AS curl
+
 FROM golang:1 AS builder
 RUN update-ca-certificates
 ARG version
@@ -13,7 +15,10 @@ RUN CGO_ENABLED=0 GOOS=${goos} GOARCH=${goarch} go build \
     ./cmd/http2smtp
 
 FROM scratch
+COPY --from=curl /curl /
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=builder /http2smtp /
-EXPOSE 8080
+EXPOSE 80
+HEALTHCHECK --interval=5s --timeout=1s --retries=3 \
+    CMD ["/curl", "-fIA", "cURL healthcheck", "http://127.0.0.1/healthcheck"]
 CMD ["/http2smtp"]

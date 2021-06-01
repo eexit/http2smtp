@@ -21,8 +21,8 @@ import (
 func TestNew(t *testing.T) {
 	got := New(
 		env.Bag{
-			ServerHost: "test",
-			ServerPort: "8080",
+			SMTPAddr: "smtp:25",
+			LogLevel: "info",
 		},
 		zerolog.New(ioutil.Discard),
 		&smtp.Stub{},
@@ -30,13 +30,13 @@ func TestNew(t *testing.T) {
 	)
 	want := &API{
 		env: env.Bag{
-			ServerHost: "test",
-			ServerPort: "8080",
+			SMTPAddr: "smtp:25",
+			LogLevel: "info",
 		},
 		logger:            zerolog.New(ioutil.Discard),
 		smtpClient:        &smtp.Stub{},
 		converterProvider: converter.NewProvider(),
-		svr:               &serverWrapper{&http.Server{Addr: "test:8080"}},
+		svr:               &serverWrapper{&http.Server{Addr: ":80"}},
 	}
 
 	if !reflect.DeepEqual(got.logger, want.logger) {

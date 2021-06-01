@@ -77,7 +77,7 @@ func New(
 
 	svr.svr = &serverWrapper{
 		&http.Server{
-			Addr:         e.ServerHost + ":" + e.ServerPort,
+			Addr:         ":80",
 			Handler:      svr.Wrap(svr.Mux()),
 			ReadTimeout:  30 * time.Second,
 			WriteTimeout: 30 * time.Second,
@@ -96,7 +96,7 @@ func (a *API) Serve() error {
 	errch := make(chan error)
 
 	go func(errch chan error) {
-		a.logger.Info().Msgf("listening on %s:%s", a.env.ServerHost, a.env.ServerPort)
+		a.logger.Info().Msg("listening on :80")
 		if err := a.svr.ListenAndServe(); err != http.ErrServerClosed {
 			// Error starting the listener:
 			a.logger.Err(err).Msgf("server listening error: %s", err)
