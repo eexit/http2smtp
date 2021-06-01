@@ -139,7 +139,7 @@ func Test_provider_Get(t *testing.T) {
 		},
 		{
 			name:       "requested converter exist when there are several converters",
-			converters: []Converter{&rfc5322{}, &Stub{}},
+			converters: []Converter{&Stub{}, &rfc5322{}},
 			cid:        StubConverterID,
 			want:       &Stub{},
 			wantErr:    false,
