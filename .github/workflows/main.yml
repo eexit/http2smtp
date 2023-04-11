@@ -51,15 +51,12 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Retrieve tag
-        id: tagref
-        run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
       - name: Build and push
         uses: docker/build-push-action@v4
         with:
-          platforms: linux/amd64
-          build-args: version=${{ steps.tagref.outputs.tag }}+${{ github.sha }}
-          tags: '${{ github.repository }}:${{ steps.tagref.outputs.tag }},${{ github.repository }}:latest'
+          platforms: linux/amd64,linux/arm64
+          build-args: version=${{ github.ref_name }}+${{ github.sha }}
+          tags: '${{ github.repository }}:${{ github.ref_name }},${{ github.repository }}:latest'
           push: true
       - name: Update repo description
         uses: peter-evans/dockerhub-description@v3
@@ -77,20 +74,18 @@ jobs:
     strategy:
       matrix:
         target: [http2smtp, http2smtp-lambda]
+        goarch: [amd64, arm64]
     steps:
       - uses: actions/checkout@v3
-      - name: Retrieve tag
-        id: tagref
-        run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
       - uses: wangyoucao577/go-release-action@v1
         with:
-          github_token: ${{ secrets.GH_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           goos: linux
-          goarch: amd64
+          goarch: ${{ matrix.goarch }}
           goversion: '1.20'
           project_path: cmd/${{ matrix.target }}
           binary_name: ${{ matrix.target }}
           extra_files: LICENSE README.md
-          release_tag: ${{ steps.tagref.outputs.tag }}
-          ldflags: -X github.com/eexit/http2smtp/internal/api.Version=${{ steps.tagref.outputs.tag }}+${{ github.sha }}
+          release_tag: ${{ github.ref_name }}
+          ldflags: -X github.com/eexit/http2smtp/internal/api.Version=${{ github.ref_name }}+${{ github.sha }}
           executable_compression: upx
