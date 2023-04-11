@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	rand.Seed(time.Now().UTC().UnixNano())
+	rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	var e env.Bag
 	envconfig.MustProcess("", &e)

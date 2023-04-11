@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -55,7 +55,7 @@ func (s *spt10n) ID() ID {
 }
 
 func (s *spt10n) Convert(r *http.Request) (*Message, error) {
-	data, err := ioutil.ReadAll(r.Body)
+	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		return nil, err
 	}

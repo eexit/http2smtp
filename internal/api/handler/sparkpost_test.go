@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"regexp"
@@ -87,7 +86,7 @@ func TestSparkPost(t *testing.T) {
 				t.Errorf("SparkPost() code = %v, want %v", c, tt.wantCode)
 			}
 
-			rb, err := ioutil.ReadAll(resp.Body)
+			rb, err := io.ReadAll(resp.Body)
 			if err != nil {
 				t.Fatalf("could not read response body: %v", err)
 			}

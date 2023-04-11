@@ -2,7 +2,7 @@ package api
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -25,22 +25,22 @@ func TestAPI_Wrap(t *testing.T) {
 		{
 			name: "code ok",
 			code: http.StatusOK,
-			want: `{"level":"info","verb":"GET","ip":"127.0.0.1","user_agent":"Go-http-client/1.1","url":"/","code":200,"size":0,"message":"served request"}`,
+			want: `{"level":"info","verb":"GET","user_agent":"Go-http-client/1.1","url":"/","code":200,"size":0,"message":"served request"}`,
 		},
 		{
 			name: "code not modified",
 			code: http.StatusNotModified,
-			want: `{"level":"warn","verb":"GET","ip":"127.0.0.1","user_agent":"Go-http-client/1.1","url":"/","code":304,"size":0,"message":"served request"}`,
+			want: `{"level":"warn","verb":"GET","user_agent":"Go-http-client/1.1","url":"/","code":304,"size":0,"message":"served request"}`,
 		},
 		{
 			name: "code bad request",
 			code: http.StatusBadRequest,
-			want: `{"level":"error","verb":"GET","ip":"127.0.0.1","user_agent":"Go-http-client/1.1","url":"/","code":400,"size":0,"message":"served request"}`,
+			want: `{"level":"error","verb":"GET","user_agent":"Go-http-client/1.1","url":"/","code":400,"size":0,"message":"served request"}`,
 		},
 		{
 			name: "code internal server error",
 			code: http.StatusInternalServerError,
-			want: string(`{"level":"fatal","verb":"GET","ip":"127.0.0.1","user_agent":"Go-http-client/1.1","url":"/","code":500,"size":0,"message":"served request"}`),
+			want: string(`{"level":"fatal","verb":"GET","user_agent":"Go-http-client/1.1","url":"/","code":500,"size":0,"message":"served request"}`),
 		},
 	}
 	for _, tt := range tests {
@@ -68,6 +68,10 @@ func TestAPI_Wrap(t *testing.T) {
 			got := strings.TrimSpace(out.String())
 			// Remove the duration as this will vary
 			m := regexp.MustCompile("\"duration\":\\d+(\\.\\d+)?,")
+			got = m.ReplaceAllString(got, "")
+
+			// Remove the ip address as the port will vary
+			m = regexp.MustCompile("\"ip\":\"127\\.0\\.0\\.1:\\d+\",")
 			got = m.ReplaceAllString(got, "")
 
 			if got != tt.want {
@@ -190,7 +194,7 @@ func Test_traceIDHeaderHandler(t *testing.T) {
 			}
 
 			handler := traceIDHeaderHandler(tt.args.seekForHeader)
-			logHandler := hlog.NewHandler(zerolog.New(ioutil.Discard).With().Logger())
+			logHandler := hlog.NewHandler(zerolog.New(io.Discard).With().Logger())
 
 			// Creates a fake server that wraps tester with our handler
 			ts := httptest.NewServer(logHandler(handler(tester)))

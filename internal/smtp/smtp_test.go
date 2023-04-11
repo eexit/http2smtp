@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"io"
-	"io/ioutil"
 	"net"
 	"reflect"
 	"strings"
@@ -23,14 +22,14 @@ func TestNew(t *testing.T) {
 			}
 		}()
 
-		New("::", zerolog.New(ioutil.Discard))
+		New("::", zerolog.New(io.Discard))
 	})
 
 	t.Run("new client dials ok", func(t *testing.T) {
 		ln := newLocalListener(t)
 		defer ln.Close()
 
-		go New(ln.Addr().String(), zerolog.New(ioutil.Discard))
+		go New(ln.Addr().String(), zerolog.New(io.Discard))
 
 		conn, err := ln.Accept()
 		if err != nil {
@@ -56,7 +55,7 @@ func TestNew(t *testing.T) {
 				}
 				errc <- nil
 			}()
-			New(ln.Addr().String(), zerolog.New(ioutil.Discard))
+			New(ln.Addr().String(), zerolog.New(io.Discard))
 		}()
 
 		conn, err := ln.Accept()
