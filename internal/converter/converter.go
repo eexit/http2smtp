@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"sort"
 	"sync"
@@ -95,12 +94,12 @@ func (p *provider) Get(cid ID) (Converter, error) {
 
 // slurpBody idempotently copies a request's body
 func slurpBody(r *http.Request) (io.ReadSeeker, error) {
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		return nil, err
 	}
 	defer r.Body.Close()
 
-	r.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+	r.Body = io.NopCloser(bytes.NewBuffer(body))
 	return bytes.NewReader(body), nil
 }

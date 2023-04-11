@@ -3,7 +3,7 @@ package api
 import (
 	"context"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"os/signal"
@@ -24,7 +24,7 @@ func TestNew(t *testing.T) {
 			SMTPAddr: "smtp:25",
 			LogLevel: "info",
 		},
-		zerolog.New(ioutil.Discard),
+		zerolog.New(io.Discard),
 		&smtp.Stub{},
 		converter.NewProvider(),
 	)
@@ -33,7 +33,7 @@ func TestNew(t *testing.T) {
 			SMTPAddr: "smtp:25",
 			LogLevel: "info",
 		},
-		logger:            zerolog.New(ioutil.Discard),
+		logger:            zerolog.New(io.Discard),
 		smtpClient:        &smtp.Stub{},
 		converterProvider: converter.NewProvider(),
 		svr:               &serverWrapper{&http.Server{Addr: ":80"}},
@@ -114,7 +114,7 @@ func TestAPI_Serve(t *testing.T) {
 				svr:         tt.fields.svr,
 				env:         env.Bag{ServerShutdownTimeout: 0},
 				shutdownCtx: shutdownCtx,
-				logger:      zerolog.New(ioutil.Discard), // replace by os.Stdout for debudding
+				logger:      zerolog.New(io.Discard), // replace by os.Stdout for debudding
 				cancelFunc:  cancelFunc,
 				smtpClient:  tt.fields.smtpClient,
 				sigint:      make(chan os.Signal, 1),

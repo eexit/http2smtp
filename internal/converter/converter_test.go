@@ -2,7 +2,7 @@ package converter
 
 import (
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -198,7 +198,7 @@ func Test_slurpBody(t *testing.T) {
 				return
 			}
 
-			gotAsBytes, err := ioutil.ReadAll(got)
+			gotAsBytes, err := io.ReadAll(got)
 			if err != nil {
 				t.Fatalf("got read failed: %v", err)
 			}
@@ -210,7 +210,7 @@ func Test_slurpBody(t *testing.T) {
 			}
 
 			// Ensures the request body is still there after the slurp
-			body, err := ioutil.ReadAll(tt.req.Body)
+			body, err := io.ReadAll(tt.req.Body)
 			if err != nil {
 				t.Fatalf("request body read failed: %v", err)
 			}

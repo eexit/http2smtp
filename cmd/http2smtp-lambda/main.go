@@ -16,7 +16,7 @@ import (
 )
 
 func main() {
-	rand.Seed(time.Now().UTC().UnixNano())
+	rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	var e env.Bag
 	envconfig.MustProcess("", &e)
@@ -43,5 +43,5 @@ func main() {
 	app := api.New(e, logger, smtpClient, converterProvider)
 	adapter := httpadapter.New(app.Wrap(app.Mux()))
 
-	lambda.StartHandler(lambda.NewHandler(adapter.ProxyWithContext))
+	lambda.Start(lambda.NewHandler(adapter.ProxyWithContext))
 }

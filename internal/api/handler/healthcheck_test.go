@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -21,7 +21,7 @@ func TestHealthcheck(t *testing.T) {
 			t.Errorf("Healthcheck() returned status code %v, want %v", code, http.StatusOK)
 		}
 
-		body, err := ioutil.ReadAll(w.Body)
+		body, err := io.ReadAll(w.Body)
 		if err != nil {
 			t.Errorf("could not read response body: %v", err)
 		}

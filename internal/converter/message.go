@@ -1,9 +1,6 @@
 package converter
 
-import (
-	"io"
-	"io/ioutil"
-)
+import "io"
 
 // RecipientProvider is the common func type for To(), Cc() and Bcc()
 type RecipientProvider func(*Message) []string
@@ -48,7 +45,7 @@ func (m *Message) Bcc() []string {
 
 // Raw returns the raw message (with its headers) as a byte stream
 func (m *Message) Raw() ([]byte, error) {
-	return ioutil.ReadAll(m.raw)
+	return io.ReadAll(m.raw)
 }
 
 // HasRecipients returns true if the message contains as least one recipient
